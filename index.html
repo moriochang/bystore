@@ -385,11 +385,11 @@
             
             <div class="upload-grid">
                 <div class="file-input-group file-a">
-                    <label>📁 對比A檔案 (綠色 - 今年)</label>
+                    <label>📁 對比A檔案 (橘色 - 去年)</label>
                     <input type="file" id="fileA" accept=".xlsx,.xls">
                 </div>
                 <div class="file-input-group file-b">
-                    <label>📁 對比B檔案 (橘色 - 去年)</label>
+                    <label>📁 對比B檔案 (綠色 - 今年)</label>
                     <input type="file" id="fileB" accept=".xlsx,.xls">
                 </div>
             </div>
@@ -420,17 +420,17 @@
                                 <th colspan="3" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">毛利率</th>
                             </tr>
                             <tr>
-                                <th>去年</th>
                                 <th>今年</th>
+                                <th>去年</th>
                                 <th>成長率</th>
-                                <th>去年</th>
                                 <th>今年</th>
+                                <th>去年</th>
                                 <th>成長率</th>
-                                <th>去年</th>
                                 <th>今年</th>
+                                <th>去年</th>
                                 <th>成長率</th>
-                                <th>去年</th>
                                 <th>今年</th>
+                                <th>去年</th>
                                 <th>差異</th>
                             </tr>
                         </thead>
@@ -461,14 +461,14 @@
                     <thead>
                         <tr>
                             <th>產品類別</th>
-                            <th>今年數量</th>
                             <th>去年數量</th>
+                            <th>今年數量</th>
                             <th>數量成長</th>
-                            <th>今年金額</th>
                             <th>去年金額</th>
+                            <th>今年金額</th>
                             <th>金額成長</th>
-                            <th>今年搭售率</th>
                             <th>去年搭售率</th>
+                            <th>今年搭售率</th>
                             <th>差異</th>
                         </tr>
                     </thead>
@@ -662,8 +662,8 @@
             // 初始化各大分類
             targetCategories.forEach(category => {
                 result.categories[category] = {
-                    qtyA: 0,
-                    qtyB: 0,
+                    qtyA: 0,  // A = 去年
+                    qtyB: 0,  // B = 今年
                     amtA: 0,
                     amtB: 0,
                     costA: 0,
@@ -675,14 +675,14 @@
             const careClass5List = ['CPU', 'iPad', 'iPhone', 'AW', 'AirPods', 'Audio'];
             careClass5List.forEach(class5 => {
                 result.careByClass5[class5] = {
-                    qtyA: 0,
-                    qtyB: 0,
+                    qtyA: 0,  // A = 去年
+                    qtyB: 0,  // B = 今年
                     amtA: 0,
                     amtB: 0
                 };
             });
 
-            // 處理對比A（今年）
+            // 處理對比A（去年）
             dataA.forEach(row => {
                 // 先檢查是否為 Care 產品
                 const careData = referenceData.care[row.productCode];
@@ -717,7 +717,7 @@
                 }
             });
 
-            // 處理對比B（去年）
+            // 處理對比B（今年）
             dataB.forEach(row => {
                 const careData = referenceData.care[row.productCode];
                 if (careData) {
@@ -802,8 +802,8 @@
                 if (category === 'Care') return;
                 
                 const stats = data.categories[category];
-                totalQtyA += stats.qtyA;
-                totalQtyB += stats.qtyB;
+                totalQtyA += stats.qtyA;  // A = 去年
+                totalQtyB += stats.qtyB;  // B = 今年
                 totalAmtA += stats.amtA;
                 totalAmtB += stats.amtB;
                 totalProfitA += (stats.amtA - stats.costA);
@@ -814,14 +814,15 @@
             targetCategories.forEach(category => {
                 const stats = data.categories[category];
                 
-                const qtyGrowth = stats.qtyB !== 0 ? ((stats.qtyA - stats.qtyB) / stats.qtyB * 100) : 0;
-                const amtGrowth = stats.amtB !== 0 ? ((stats.amtA - stats.amtB) / stats.amtB * 100) : 0;
-                const profitA = stats.amtA - stats.costA;
-                const profitB = stats.amtB - stats.costB;
-                const profitGrowth = profitB !== 0 ? ((profitA - profitB) / profitB * 100) : 0;
-                const profitRateA = stats.amtA > 0 ? (profitA / stats.amtA * 100) : 0;
-                const profitRateB = stats.amtB > 0 ? (profitB / stats.amtB * 100) : 0;
-                const profitRateDiff = profitRateA - profitRateB;
+                // 成長率 = (今年 - 去年) / 去年 * 100
+                const qtyGrowth = stats.qtyA !== 0 ? ((stats.qtyB - stats.qtyA) / stats.qtyA * 100) : 0;
+                const amtGrowth = stats.amtA !== 0 ? ((stats.amtB - stats.amtA) / stats.amtA * 100) : 0;
+                const profitA = stats.amtA - stats.costA;  // 去年毛利
+                const profitB = stats.amtB - stats.costB;  // 今年毛利
+                const profitGrowth = profitA !== 0 ? ((profitB - profitA) / profitA * 100) : 0;
+                const profitRateA = stats.amtA > 0 ? (profitA / stats.amtA * 100) : 0;  // 去年毛利率
+                const profitRateB = stats.amtB > 0 ? (profitB / stats.amtB * 100) : 0;  // 今年毛利率
+                const profitRateDiff = profitRateB - profitRateA;
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -843,12 +844,12 @@
             });
 
             // 加入總計列
-            const totalQtyGrowth = totalQtyB !== 0 ? ((totalQtyA - totalQtyB) / totalQtyB * 100) : 0;
-            const totalAmtGrowth = totalAmtB !== 0 ? ((totalAmtA - totalAmtB) / totalAmtB * 100) : 0;
-            const totalProfitGrowth = totalProfitB !== 0 ? ((totalProfitA - totalProfitB) / totalProfitB * 100) : 0;
+            const totalQtyGrowth = totalQtyA !== 0 ? ((totalQtyB - totalQtyA) / totalQtyA * 100) : 0;
+            const totalAmtGrowth = totalAmtA !== 0 ? ((totalAmtB - totalAmtA) / totalAmtA * 100) : 0;
+            const totalProfitGrowth = totalProfitA !== 0 ? ((totalProfitB - totalProfitA) / totalProfitA * 100) : 0;
             const totalProfitRateA = totalAmtA > 0 ? (totalProfitA / totalAmtA * 100) : 0;
             const totalProfitRateB = totalAmtB > 0 ? (totalProfitB / totalAmtB * 100) : 0;
-            const totalProfitRateDiff = totalProfitRateA - totalProfitRateB;
+            const totalProfitRateDiff = totalProfitRateB - totalProfitRateA;
 
             const totalRow = document.createElement('tr');
             totalRow.style.background = 'rgba(255, 255, 255, 0.08)';
@@ -880,15 +881,15 @@
             targetCategories.forEach(category => {
                 if (category === 'Care') return;
                 const stats = data.categories[category];
-                totalAmtA += stats.amtA;
-                totalAmtB += stats.amtB;
+                totalAmtA += stats.amtA;  // A = 去年
+                totalAmtB += stats.amtB;  // B = 今年
                 totalCostA += stats.costA;
                 totalCostB += stats.costB;
             });
             
-            const profitA = totalAmtA - totalCostA;
-            const profitB = totalAmtB - totalCostB;
-            const profitGrowth = profitB !== 0 ? ((profitA - profitB) / profitB * 100).toFixed(1) : 0;
+            const profitA = totalAmtA - totalCostA;  // 去年毛利
+            const profitB = totalAmtB - totalCostB;  // 今年毛利
+            const profitGrowth = profitA !== 0 ? ((profitB - profitA) / profitA * 100).toFixed(1) : 0;
             const profitGrowthClass = profitGrowth > 0 ? 'positive' : profitGrowth < 0 ? 'negative' : 'neutral';
             const profitSign = profitGrowth > 0 ? '+' : '';
 
@@ -896,25 +897,25 @@
                 <div class="summary-card">
                     <div class="summary-label">今年銷售額</div>
                     <div class="summary-value" style="color: #4ade80;">
-                        ${(totalAmtA / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
-                    </div>
-                    <div class="summary-subvalue">對比A</div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="summary-label">去年銷售額</div>
-                    <div class="summary-value" style="color: #fb923c;">
                         ${(totalAmtB / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
                     </div>
                     <div class="summary-subvalue">對比B</div>
                 </div>
 
                 <div class="summary-card">
+                    <div class="summary-label">去年銷售額</div>
+                    <div class="summary-value" style="color: #fb923c;">
+                        ${(totalAmtA / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
+                    </div>
+                    <div class="summary-subvalue">對比A</div>
+                </div>
+
+                <div class="summary-card">
                     <div class="summary-label">今年毛利</div>
                     <div class="summary-value" style="color: #60a5fa;">
-                        ${(profitA / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
+                        ${(profitB / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
                     </div>
-                    <div class="summary-subvalue">毛利率 ${totalAmtA > 0 ? (profitA / totalAmtA * 100).toFixed(1) : 0}%</div>
+                    <div class="summary-subvalue">毛利率 ${totalAmtB > 0 ? (profitB / totalAmtB * 100).toFixed(1) : 0}%</div>
                 </div>
 
                 <div class="summary-card">
@@ -944,23 +945,23 @@
             careProducts.forEach(product => {
                 // 從 careByClass5 取得 Care 數量和金額
                 const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
-                const careQtyA = careData.qtyA;
-                const careQtyB = careData.qtyB;
+                const careQtyA = careData.qtyA;  // A = 去年
+                const careQtyB = careData.qtyB;  // B = 今年
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
                 // 主機數量
-                const mainQtyA = data.categories[product.mainCategory].qtyA;
-                const mainQtyB = data.categories[product.mainCategory].qtyB;
+                const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
+                const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
 
                 // 搭售率
-                const rateA = mainQtyA > 0 ? (careQtyA / mainQtyA * 100) : 0;
-                const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;
-                const rateDiff = rateA - rateB;
+                const rateA = mainQtyA > 0 ? (careQtyA / mainQtyA * 100) : 0;  // 去年
+                const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;  // 今年
+                const rateDiff = rateB - rateA;
 
-                // 成長率
-                const qtyGrowth = careQtyB !== 0 ? ((careQtyA - careQtyB) / careQtyB * 100).toFixed(1) : 0;
-                const amtGrowth = careAmtB !== 0 ? ((careAmtA - careAmtB) / careAmtB * 100).toFixed(1) : 0;
+                // 成長率 = (今年 - 去年) / 去年 * 100
+                const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100).toFixed(1) : 0;
+                const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100).toFixed(1) : 0;
 
                 const qtyClass = qtyGrowth > 0 ? 'positive' : qtyGrowth < 0 ? 'negative' : 'neutral';
                 const amtClass = amtGrowth > 0 ? 'positive' : amtGrowth < 0 ? 'negative' : 'neutral';
@@ -978,8 +979,8 @@
                     <td>${Math.round(careAmtA).toLocaleString()}</td>
                     <td>${Math.round(careAmtB).toLocaleString()}</td>
                     <td><span class="growth ${amtClass}">${amtSign}${amtGrowth}%</span></td>
-                    <td class="rate-value" style="color: #4ade80;">${rateA.toFixed(2)}%</td>
-                    <td class="rate-value" style="color: #fb923c;">${rateB.toFixed(2)}%</td>
+                    <td class="rate-value" style="color: #fb923c;">${rateA.toFixed(2)}%</td>
+                    <td class="rate-value" style="color: #4ade80;">${rateB.toFixed(2)}%</td>
                     <td><span class="growth ${rateClass}">${rateSign}${rateDiff.toFixed(2)}%</span></td>
                 `;
                 tbody.appendChild(row);
