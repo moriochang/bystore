@@ -385,11 +385,11 @@
             
             <div class="upload-grid">
                 <div class="file-input-group file-a">
-                    <label>📁 對比A檔案 (橘色 - 去年)</label>
+                    <label>📁 對比A檔案 (去年)</label>
                     <input type="file" id="fileA" accept=".xlsx,.xls">
                 </div>
                 <div class="file-input-group file-b">
-                    <label>📁 對比B檔案 (綠色 - 今年)</label>
+                    <label>📁 對比B檔案 (今年)</label>
                     <input type="file" id="fileB" accept=".xlsx,.xls">
                 </div>
             </div>
@@ -656,7 +656,7 @@
         function processStoreData(dataA, dataB) {
             const result = {
                 categories: {},
-                careByClass5: {}  // 改用 class5 統計
+                careByClass5: {}
             };
 
             // 初始化各大分類
@@ -682,68 +682,91 @@
                 };
             });
 
+            // 根據產品名稱推測 class5（用於不在Care工作表中的產品）
+            function guessClass5FromName(productName) {
+                const name = productName.toUpperCase();
+                if (name.includes('MBA') || name.includes('MBP') || name.includes('MAC MINI') || 
+                    name.includes('IMAC') || name.includes('MAC PRO') || name.includes('MACBOOK')) {
+                    return 'CPU';
+                }
+                if (name.includes('IPAD')) return 'iPad';
+                if (name.includes('IPHONE')) return 'iPhone';
+                if (name.includes('WATCH') || name.includes(' AW ')) return 'AW';
+                if (name.includes('AIRPODS')) return 'AirPods';
+                if (name.includes('HOMEPOD') || name.includes('BEATS')) return 'Audio';
+                return null;
+            }
+
             // 處理對比A（去年）
             dataA.forEach(row => {
-                // 先檢查是否為 Care 產品
-                const careData = referenceData.care[row.productCode];
-                if (careData) {
+                // 先從立展工作表檢查是否為Care產品
+                const refData = referenceData.products[row.productCode];
+                
+                if (refData && refData['大分類'] === 'Care') {
                     // 是 Care 產品
-                    const class5 = careData.class5;
+                    let class5 = null;
+                    
+                    // 優先從Care工作表取得class5
+                    if (referenceData.care[row.productCode]) {
+                        class5 = referenceData.care[row.productCode].class5;
+                    } else {
+                        // 如果不在Care工作表中，根據產品名稱推測
+                        class5 = guessClass5FromName(row.productName);
+                    }
+                    
                     if (class5 && result.careByClass5[class5]) {
                         result.careByClass5[class5].qtyA += row.qty;
                         result.careByClass5[class5].amtA += row.amt;
                     }
                     
                     // Care 也要計入大分類統計
-                    if (result.categories['Care']) {
-                        result.categories['Care'].qtyA += row.qty;
-                        result.categories['Care'].amtA += row.amt;
-                        result.categories['Care'].costA += row.cost;
-                        result.categories['Care'].costA -= row.adjCost;
-                    }
-                } else {
-                    // 不是 Care 產品，從立展工作表查詢
-                    const refData = referenceData.products[row.productCode];
-                    if (refData) {
-                        const category = refData['大分類'];
-                        
-                        if (result.categories[category]) {
-                            result.categories[category].qtyA += row.qty;
-                            result.categories[category].amtA += row.amt;
-                            result.categories[category].costA += row.cost;
-                            result.categories[category].costA -= row.adjCost;
-                        }
+                    result.categories['Care'].qtyA += row.qty;
+                    result.categories['Care'].amtA += row.amt;
+                    result.categories['Care'].costA += row.cost;
+                    result.categories['Care'].costA -= row.adjCost;
+                } else if (refData) {
+                    // 不是 Care 產品
+                    const category = refData['大分類'];
+                    
+                    if (result.categories[category]) {
+                        result.categories[category].qtyA += row.qty;
+                        result.categories[category].amtA += row.amt;
+                        result.categories[category].costA += row.cost;
+                        result.categories[category].costA -= row.adjCost;
                     }
                 }
             });
 
             // 處理對比B（今年）
             dataB.forEach(row => {
-                const careData = referenceData.care[row.productCode];
-                if (careData) {
-                    const class5 = careData.class5;
+                const refData = referenceData.products[row.productCode];
+                
+                if (refData && refData['大分類'] === 'Care') {
+                    let class5 = null;
+                    
+                    if (referenceData.care[row.productCode]) {
+                        class5 = referenceData.care[row.productCode].class5;
+                    } else {
+                        class5 = guessClass5FromName(row.productName);
+                    }
+                    
                     if (class5 && result.careByClass5[class5]) {
                         result.careByClass5[class5].qtyB += row.qty;
                         result.careByClass5[class5].amtB += row.amt;
                     }
                     
-                    if (result.categories['Care']) {
-                        result.categories['Care'].qtyB += row.qty;
-                        result.categories['Care'].amtB += row.amt;
-                        result.categories['Care'].costB += row.cost;
-                        result.categories['Care'].costB -= row.adjCost;
-                    }
-                } else {
-                    const refData = referenceData.products[row.productCode];
-                    if (refData) {
-                        const category = refData['大分類'];
-                        
-                        if (result.categories[category]) {
-                            result.categories[category].qtyB += row.qty;
-                            result.categories[category].amtB += row.amt;
-                            result.categories[category].costB += row.cost;
-                            result.categories[category].costB -= row.adjCost;
-                        }
+                    result.categories['Care'].qtyB += row.qty;
+                    result.categories['Care'].amtB += row.amt;
+                    result.categories['Care'].costB += row.cost;
+                    result.categories['Care'].costB -= row.adjCost;
+                } else if (refData) {
+                    const category = refData['大分類'];
+                    
+                    if (result.categories[category]) {
+                        result.categories[category].qtyB += row.qty;
+                        result.categories[category].amtB += row.amt;
+                        result.categories[category].costB += row.cost;
+                        result.categories[category].costB -= row.adjCost;
                     }
                 }
             });
