@@ -420,17 +420,17 @@
                                 <th colspan="3" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">毛利率</th>
                             </tr>
                             <tr>
-                                <th>今年</th>
                                 <th>去年</th>
+                                <th>今年</th>
                                 <th>成長率</th>
-                                <th>今年</th>
                                 <th>去年</th>
+                                <th>今年</th>
                                 <th>成長率</th>
-                                <th>今年</th>
                                 <th>去年</th>
+                                <th>今年</th>
                                 <th>成長率</th>
-                                <th>今年</th>
                                 <th>去年</th>
+                                <th>今年</th>
                                 <th>差異</th>
                             </tr>
                         </thead>
@@ -850,17 +850,17 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="store-name">${category}</td>
-                    <td>${Math.round(stats.qtyB).toLocaleString()}</td>
                     <td>${Math.round(stats.qtyA).toLocaleString()}</td>
+                    <td>${Math.round(stats.qtyB).toLocaleString()}</td>
                     <td>${formatGrowth(qtyGrowth)}</td>
-                    <td>${Math.round(stats.amtB).toLocaleString()}</td>
                     <td>${Math.round(stats.amtA).toLocaleString()}</td>
+                    <td>${Math.round(stats.amtB).toLocaleString()}</td>
                     <td>${formatGrowth(amtGrowth)}</td>
-                    <td>${Math.round(profitB).toLocaleString()}</td>
                     <td>${Math.round(profitA).toLocaleString()}</td>
+                    <td>${Math.round(profitB).toLocaleString()}</td>
                     <td>${formatGrowth(profitGrowth)}</td>
-                    <td>${profitRateB.toFixed(2)}%</td>
                     <td>${profitRateA.toFixed(2)}%</td>
+                    <td>${profitRateB.toFixed(2)}%</td>
                     <td>${formatDifference(profitRateDiff)}</td>
                 `;
                 tbody.appendChild(row);
@@ -879,17 +879,17 @@
             totalRow.style.fontWeight = '600';
             totalRow.innerHTML = `
                 <td class="store-name">總計 (排除Care)</td>
-                <td>${Math.round(totalQtyB).toLocaleString()}</td>
                 <td>${Math.round(totalQtyA).toLocaleString()}</td>
+                <td>${Math.round(totalQtyB).toLocaleString()}</td>
                 <td>${formatGrowth(totalQtyGrowth)}</td>
-                <td>${Math.round(totalAmtB).toLocaleString()}</td>
                 <td>${Math.round(totalAmtA).toLocaleString()}</td>
+                <td>${Math.round(totalAmtB).toLocaleString()}</td>
                 <td>${formatGrowth(totalAmtGrowth)}</td>
-                <td>${Math.round(totalProfitB).toLocaleString()}</td>
                 <td>${Math.round(totalProfitA).toLocaleString()}</td>
+                <td>${Math.round(totalProfitB).toLocaleString()}</td>
                 <td>${formatGrowth(totalProfitGrowth)}</td>
-                <td>${totalProfitRateB.toFixed(2)}%</td>
                 <td>${totalProfitRateA.toFixed(2)}%</td>
+                <td>${totalProfitRateB.toFixed(2)}%</td>
                 <td>${formatDifference(totalProfitRateDiff)}</td>
             `;
             tbody.appendChild(totalRow);
@@ -918,19 +918,19 @@
 
             container.innerHTML = `
                 <div class="summary-card">
-                    <div class="summary-label">今年銷售額</div>
-                    <div class="summary-value" style="color: #4ade80;">
-                        ${(totalAmtB / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
-                    </div>
-                    <div class="summary-subvalue">對比B</div>
-                </div>
-
-                <div class="summary-card">
                     <div class="summary-label">去年銷售額</div>
                     <div class="summary-value" style="color: #fb923c;">
                         ${(totalAmtA / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
                     </div>
                     <div class="summary-subvalue">對比A</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-label">今年銷售額</div>
+                    <div class="summary-value" style="color: #4ade80;">
+                        ${(totalAmtB / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
+                    </div>
+                    <div class="summary-subvalue">對比B</div>
                 </div>
 
                 <div class="summary-card">
@@ -1032,7 +1032,10 @@
             const storeDisplay = `門市${currentStore}`;
             let csv = '\uFEFF';
             
+            // 標題
             csv += `${storeDisplay}\n\n`;
+            
+            // 第一部分：銷售分析結果與年度對比
             csv += '銷售分析結果與年度對比\n';
             csv += '品項,去年數量,今年數量,數量成長率,去年金額,今年金額,金額成長率,去年毛利,今年毛利,毛利成長率,去年毛利率,今年毛利率,毛利率差異\n';
             
@@ -1043,16 +1046,59 @@
                 const profitRateA = stats.amtA > 0 ? (profitA / stats.amtA * 100) : 0;
                 const profitRateB = stats.amtB > 0 ? (profitB / stats.amtB * 100) : 0;
                 
-                csv += `${category},${Math.round(stats.qtyB)},${Math.round(stats.qtyA)},`;
-                csv += `${stats.qtyB !== 0 ? ((stats.qtyA - stats.qtyB) / stats.qtyB * 100).toFixed(2) : 0}%,`;
-                csv += `${Math.round(stats.amtB)},${Math.round(stats.amtA)},`;
-                csv += `${stats.amtB !== 0 ? ((stats.amtA - stats.amtB) / stats.amtB * 100).toFixed(2) : 0}%,`;
-                csv += `${Math.round(profitB)},${Math.round(profitA)},`;
-                csv += `${profitB !== 0 ? ((profitA - profitB) / profitB * 100).toFixed(2) : 0}%,`;
-                csv += `${profitRateB.toFixed(2)}%,${profitRateA.toFixed(2)}%,`;
-                csv += `${(profitRateA - profitRateB).toFixed(2)}%\n`;
+                csv += `${category},${Math.round(stats.qtyA)},${Math.round(stats.qtyB)},`;
+                csv += `${stats.qtyA !== 0 ? ((stats.qtyB - stats.qtyA) / stats.qtyA * 100).toFixed(2) : 0}%,`;
+                csv += `${Math.round(stats.amtA)},${Math.round(stats.amtB)},`;
+                csv += `${stats.amtA !== 0 ? ((stats.amtB - stats.amtA) / stats.amtA * 100).toFixed(2) : 0}%,`;
+                csv += `${Math.round(profitA)},${Math.round(profitB)},`;
+                csv += `${profitA !== 0 ? ((profitB - profitA) / profitA * 100).toFixed(2) : 0}%,`;
+                csv += `${profitRateA.toFixed(2)}%,${profitRateB.toFixed(2)}%,`;
+                csv += `${(profitRateB - profitRateA).toFixed(2)}%\n`;
             });
 
+            // 第二部分：Care 產品搭售率分析
+            csv += '\n\nCare 產品搭售率分析\n';
+            csv += '產品類別,去年數量,今年數量,數量成長率,去年金額,今年金額,金額成長率,去年搭售率,今年搭售率,搭售率差異\n';
+            
+            const careProducts = [
+                { name: 'CPU', class5: 'CPU', mainCategory: 'CPU' },
+                { name: 'iPad', class5: 'iPad', mainCategory: 'iPad' },
+                { name: 'iPhone', class5: 'iPhone', mainCategory: 'iPhone' },
+                { name: 'Apple Watch', class5: 'AW', mainCategory: 'Apple Watch' },
+                { name: 'AirPods', class5: 'AirPods', mainCategory: 'AirPods' },
+                { name: 'Audio', class5: 'Audio', mainCategory: 'Audio' }
+            ];
+
+            careProducts.forEach(product => {
+                const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
+                const careQtyA = careData.qtyA;  // 去年
+                const careQtyB = careData.qtyB;  // 今年
+                const careAmtA = careData.amtA;
+                const careAmtB = careData.amtB;
+
+                // 主機數量
+                const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
+                const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
+
+                // 搭售率
+                const rateA = mainQtyA > 0 ? (careQtyA / mainQtyA * 100) : 0;
+                const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;
+                const rateDiff = rateB - rateA;
+
+                // 成長率
+                const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100) : 0;
+                const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100) : 0;
+
+                csv += `${product.name},`;
+                csv += `${Math.round(careQtyA)},${Math.round(careQtyB)},`;
+                csv += `${qtyGrowth.toFixed(2)}%,`;
+                csv += `${Math.round(careAmtA)},${Math.round(careAmtB)},`;
+                csv += `${amtGrowth.toFixed(2)}%,`;
+                csv += `${rateA.toFixed(2)}%,${rateB.toFixed(2)}%,`;
+                csv += `${rateDiff.toFixed(2)}%\n`;
+            });
+
+            // 產生下載
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
