@@ -460,16 +460,24 @@
                 <table class="care-table">
                     <thead>
                         <tr>
-                            <th>產品類別</th>
-                            <th>去年數量</th>
-                            <th>今年數量</th>
-                            <th>數量成長</th>
-                            <th>去年金額</th>
-                            <th>今年金額</th>
-                            <th>金額成長</th>
-                            <th>去年搭售率</th>
-                            <th>今年搭售率</th>
-                            <th>差異</th>
+                            <th rowspan="2" style="vertical-align: middle;">產品類別</th>
+                            <th colspan="4" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">去年</th>
+                            <th colspan="4" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">今年</th>
+                            <th colspan="4" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">YoY</th>
+                        </tr>
+                        <tr>
+                            <th>ST</th>
+                            <th>AC+ 套數</th>
+                            <th>AC+ 金額</th>
+                            <th>搭售率</th>
+                            <th>ST</th>
+                            <th>AC+ 套數</th>
+                            <th>AC+ 金額</th>
+                            <th>搭售率</th>
+                            <th>ST</th>
+                            <th>AC+ 套數</th>
+                            <th>AC+ 金額</th>
+                            <th>搭售率</th>
                         </tr>
                     </thead>
                     <tbody id="careTableBody"></tbody>
@@ -960,33 +968,33 @@
                 { name: 'CPU', class5: 'CPU', mainCategory: 'CPU' },
                 { name: 'iPad', class5: 'iPad', mainCategory: 'iPad' },
                 { name: 'iPhone', class5: 'iPhone', mainCategory: 'iPhone' },
-                { name: 'Apple Watch', class5: 'AW', mainCategory: 'Apple Watch' },
+                { name: 'AW', class5: 'AW', mainCategory: 'Apple Watch' },
                 { name: 'AirPods', class5: 'Audio', mainCategory: 'AirPods' }  // Audio class5 → 显示为 AirPods
             ];
 
-            // 总计变数
+            // 總計變數
             let totalCareQtyA = 0, totalCareQtyB = 0, totalCareAmtA = 0, totalCareAmtB = 0;
             let totalMainQtyA = 0, totalMainQtyB = 0;
 
             careProducts.forEach(product => {
-                // 从 careByClass5 取得 Care 数量和金额
+                // 從 careByClass5 取得 Care 數量和金額
                 const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
                 const careQtyA = careData.qtyA;  // A = 去年
                 const careQtyB = careData.qtyB;  // B = 今年
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
-                // 累加到总计
+                // 累加到總計
                 totalCareQtyA += careQtyA;
                 totalCareQtyB += careQtyB;
                 totalCareAmtA += careAmtA;
                 totalCareAmtB += careAmtB;
 
-                // 主机数量
+                // 主機數量（ST）
                 const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
                 const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
 
-                // 累加主机数量到总计（排除 Care）
+                // 累加主機數量到總計（排除 Care）
                 if (product.mainCategory !== 'Care') {
                     totalMainQtyA += mainQtyA;
                     totalMainQtyB += mainQtyB;
@@ -997,13 +1005,17 @@
                 const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;  // 今年
                 const rateDiff = rateB - rateA;
 
-                // 成长率 = (今年 - 去年) / 去年 * 100
-                const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100).toFixed(1) : 0;
-                const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100).toFixed(1) : 0;
+                // YoY 成長 = (今年 - 去年) / 去年 * 100
+                const stGrowth = mainQtyA !== 0 ? ((mainQtyB - mainQtyA) / mainQtyA * 100) : 0;
+                const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100) : 0;
+                const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100) : 0;
 
+                const stClass = stGrowth > 0 ? 'positive' : stGrowth < 0 ? 'negative' : 'neutral';
                 const qtyClass = qtyGrowth > 0 ? 'positive' : qtyGrowth < 0 ? 'negative' : 'neutral';
                 const amtClass = amtGrowth > 0 ? 'positive' : amtGrowth < 0 ? 'negative' : 'neutral';
                 const rateClass = rateDiff > 0 ? 'positive' : rateDiff < 0 ? 'negative' : 'neutral';
+                
+                const stSign = stGrowth > 0 ? '+' : '';
                 const qtySign = qtyGrowth > 0 ? '+' : '';
                 const amtSign = amtGrowth > 0 ? '+' : '';
                 const rateSign = rateDiff > 0 ? '+' : '';
@@ -1011,29 +1023,36 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="store-name">${product.name}</td>
+                    <td>${Math.round(mainQtyA).toLocaleString()}</td>
                     <td>${Math.round(careQtyA).toLocaleString()}</td>
-                    <td>${Math.round(careQtyB).toLocaleString()}</td>
-                    <td><span class="growth ${qtyClass}">${qtySign}${qtyGrowth}%</span></td>
                     <td>${Math.round(careAmtA).toLocaleString()}</td>
-                    <td>${Math.round(careAmtB).toLocaleString()}</td>
-                    <td><span class="growth ${amtClass}">${amtSign}${amtGrowth}%</span></td>
                     <td class="rate-value" style="color: #fb923c;">${rateA.toFixed(2)}%</td>
+                    <td>${Math.round(mainQtyB).toLocaleString()}</td>
+                    <td>${Math.round(careQtyB).toLocaleString()}</td>
+                    <td>${Math.round(careAmtB).toLocaleString()}</td>
                     <td class="rate-value" style="color: #4ade80;">${rateB.toFixed(2)}%</td>
+                    <td><span class="growth ${stClass}">${stSign}${stGrowth.toFixed(1)}%</span></td>
+                    <td><span class="growth ${qtyClass}">${qtySign}${qtyGrowth.toFixed(1)}%</span></td>
+                    <td><span class="growth ${amtClass}">${amtSign}${amtGrowth.toFixed(1)}%</span></td>
                     <td><span class="growth ${rateClass}">${rateSign}${rateDiff.toFixed(2)}%</span></td>
                 `;
                 tbody.appendChild(row);
             });
 
-            // 加入总计列
+            // 加入總計列
+            const totalStGrowth = totalMainQtyA !== 0 ? ((totalMainQtyB - totalMainQtyA) / totalMainQtyA * 100) : 0;
             const totalQtyGrowth = totalCareQtyA !== 0 ? ((totalCareQtyB - totalCareQtyA) / totalCareQtyA * 100) : 0;
             const totalAmtGrowth = totalCareAmtA !== 0 ? ((totalCareAmtB - totalCareAmtA) / totalCareAmtA * 100) : 0;
             const totalRateA = totalMainQtyA > 0 ? (totalCareQtyA / totalMainQtyA * 100) : 0;
             const totalRateB = totalMainQtyB > 0 ? (totalCareQtyB / totalMainQtyB * 100) : 0;
             const totalRateDiff = totalRateB - totalRateA;
 
+            const totalStClass = totalStGrowth > 0 ? 'positive' : totalStGrowth < 0 ? 'negative' : 'neutral';
             const totalQtyClass = totalQtyGrowth > 0 ? 'positive' : totalQtyGrowth < 0 ? 'negative' : 'neutral';
             const totalAmtClass = totalAmtGrowth > 0 ? 'positive' : totalAmtGrowth < 0 ? 'negative' : 'neutral';
             const totalRateClass = totalRateDiff > 0 ? 'positive' : totalRateDiff < 0 ? 'negative' : 'neutral';
+            
+            const totalStSign = totalStGrowth > 0 ? '+' : '';
             const totalQtySign = totalQtyGrowth > 0 ? '+' : '';
             const totalAmtSign = totalAmtGrowth > 0 ? '+' : '';
             const totalRateSign = totalRateDiff > 0 ? '+' : '';
@@ -1042,15 +1061,18 @@
             totalRow.style.background = 'rgba(255, 255, 255, 0.08)';
             totalRow.style.fontWeight = '600';
             totalRow.innerHTML = `
-                <td class="store-name">总计</td>
+                <td class="store-name">總計</td>
+                <td>${Math.round(totalMainQtyA).toLocaleString()}</td>
                 <td>${Math.round(totalCareQtyA).toLocaleString()}</td>
-                <td>${Math.round(totalCareQtyB).toLocaleString()}</td>
-                <td><span class="growth ${totalQtyClass}">${totalQtySign}${totalQtyGrowth.toFixed(1)}%</span></td>
                 <td>${Math.round(totalCareAmtA).toLocaleString()}</td>
-                <td>${Math.round(totalCareAmtB).toLocaleString()}</td>
-                <td><span class="growth ${totalAmtClass}">${totalAmtSign}${totalAmtGrowth.toFixed(1)}%</span></td>
                 <td class="rate-value" style="color: #fb923c;">${totalRateA.toFixed(2)}%</td>
+                <td>${Math.round(totalMainQtyB).toLocaleString()}</td>
+                <td>${Math.round(totalCareQtyB).toLocaleString()}</td>
+                <td>${Math.round(totalCareAmtB).toLocaleString()}</td>
                 <td class="rate-value" style="color: #4ade80;">${totalRateB.toFixed(2)}%</td>
+                <td><span class="growth ${totalStClass}">${totalStSign}${totalStGrowth.toFixed(1)}%</span></td>
+                <td><span class="growth ${totalQtyClass}">${totalQtySign}${totalQtyGrowth.toFixed(1)}%</span></td>
+                <td><span class="growth ${totalAmtClass}">${totalAmtSign}${totalAmtGrowth.toFixed(1)}%</span></td>
                 <td><span class="growth ${totalRateClass}">${totalRateSign}${totalRateDiff.toFixed(2)}%</span></td>
             `;
             tbody.appendChild(totalRow);
@@ -1102,19 +1124,19 @@
                 csv += `${(profitRateB - profitRateA).toFixed(2)}%\n`;
             });
 
-            // 第二部分：Care 产品搭售率分析
-            csv += '\n\nCare 产品搭售率分析\n';
-            csv += '产品类别,去年数量,今年数量,数量成长率,去年金额,今年金额,金额成长率,去年搭售率,今年搭售率,搭售率差异\n';
+            // 第二部分：Care 產品搭售率分析
+            csv += '\n\nCare 產品搭售率分析\n';
+            csv += '產品類別,去年ST,去年AC+套數,去年AC+金額,去年搭售率,今年ST,今年AC+套數,今年AC+金額,今年搭售率,YoY ST,YoY AC+套數,YoY AC+金額,YoY 搭售率\n';
             
             const careProducts = [
                 { name: 'CPU', class5: 'CPU', mainCategory: 'CPU' },
                 { name: 'iPad', class5: 'iPad', mainCategory: 'iPad' },
                 { name: 'iPhone', class5: 'iPhone', mainCategory: 'iPhone' },
-                { name: 'Apple Watch', class5: 'AW', mainCategory: 'Apple Watch' },
-                { name: 'AirPods', class5: 'Audio', mainCategory: 'AirPods' }  // Audio class5 → 显示为 AirPods
+                { name: 'AW', class5: 'AW', mainCategory: 'Apple Watch' },
+                { name: 'AirPods', class5: 'Audio', mainCategory: 'AirPods' }  // Audio class5 → 顯示為 AirPods
             ];
 
-            // 总计变数
+            // 總計變數
             let totalCareQtyA = 0, totalCareQtyB = 0, totalCareAmtA = 0, totalCareAmtB = 0;
             let totalMainQtyA = 0, totalMainQtyB = 0;
 
@@ -1125,17 +1147,17 @@
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
-                // 累加到总计
+                // 累加到總計
                 totalCareQtyA += careQtyA;
                 totalCareQtyB += careQtyB;
                 totalCareAmtA += careAmtA;
                 totalCareAmtB += careAmtB;
 
-                // 主机数量
+                // 主機數量（ST）
                 const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
                 const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
 
-                // 累加主机数量
+                // 累加主機數量
                 if (product.mainCategory !== 'Care') {
                     totalMainQtyA += mainQtyA;
                     totalMainQtyB += mainQtyB;
@@ -1146,35 +1168,31 @@
                 const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;
                 const rateDiff = rateB - rateA;
 
-                // 成长率
+                // YoY 成長率
+                const stGrowth = mainQtyA !== 0 ? ((mainQtyB - mainQtyA) / mainQtyA * 100) : 0;
                 const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100) : 0;
                 const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100) : 0;
 
                 csv += `${product.name},`;
-                csv += `${Math.round(careQtyA)},${Math.round(careQtyB)},`;
-                csv += `${qtyGrowth.toFixed(2)}%,`;
-                csv += `${Math.round(careAmtA)},${Math.round(careAmtB)},`;
-                csv += `${amtGrowth.toFixed(2)}%,`;
-                csv += `${rateA.toFixed(2)}%,${rateB.toFixed(2)}%,`;
-                csv += `${rateDiff.toFixed(2)}%\n`;
+                csv += `${Math.round(mainQtyA)},${Math.round(careQtyA)},${Math.round(careAmtA)},${rateA.toFixed(2)}%,`;
+                csv += `${Math.round(mainQtyB)},${Math.round(careQtyB)},${Math.round(careAmtB)},${rateB.toFixed(2)}%,`;
+                csv += `${stGrowth.toFixed(2)}%,${qtyGrowth.toFixed(2)}%,${amtGrowth.toFixed(2)}%,${rateDiff.toFixed(2)}%\n`;
             });
 
-            // 加入总计列
+            // 加入總計列
+            const totalStGrowth = totalMainQtyA !== 0 ? ((totalMainQtyB - totalMainQtyA) / totalMainQtyA * 100) : 0;
             const totalQtyGrowth = totalCareQtyA !== 0 ? ((totalCareQtyB - totalCareQtyA) / totalCareQtyA * 100) : 0;
             const totalAmtGrowth = totalCareAmtA !== 0 ? ((totalCareAmtB - totalCareAmtA) / totalCareAmtA * 100) : 0;
             const totalRateA = totalMainQtyA > 0 ? (totalCareQtyA / totalMainQtyA * 100) : 0;
             const totalRateB = totalMainQtyB > 0 ? (totalCareQtyB / totalMainQtyB * 100) : 0;
             const totalRateDiff = totalRateB - totalRateA;
 
-            csv += `总计,`;
-            csv += `${Math.round(totalCareQtyA)},${Math.round(totalCareQtyB)},`;
-            csv += `${totalQtyGrowth.toFixed(2)}%,`;
-            csv += `${Math.round(totalCareAmtA)},${Math.round(totalCareAmtB)},`;
-            csv += `${totalAmtGrowth.toFixed(2)}%,`;
-            csv += `${totalRateA.toFixed(2)}%,${totalRateB.toFixed(2)}%,`;
-            csv += `${totalRateDiff.toFixed(2)}%\n`;
+            csv += `總計,`;
+            csv += `${Math.round(totalMainQtyA)},${Math.round(totalCareQtyA)},${Math.round(totalCareAmtA)},${totalRateA.toFixed(2)}%,`;
+            csv += `${Math.round(totalMainQtyB)},${Math.round(totalCareQtyB)},${Math.round(totalCareAmtB)},${totalRateB.toFixed(2)}%,`;
+            csv += `${totalStGrowth.toFixed(2)}%,${totalQtyGrowth.toFixed(2)}%,${totalAmtGrowth.toFixed(2)}%,${totalRateDiff.toFixed(2)}%\n`;
 
-            // 产生下载
+            // 產生下載
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
