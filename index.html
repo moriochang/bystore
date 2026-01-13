@@ -965,6 +965,10 @@
                 { name: 'Audio', class5: 'Audio', mainCategory: 'Audio' }
             ];
 
+            // 總計變數
+            let totalCareQtyA = 0, totalCareQtyB = 0, totalCareAmtA = 0, totalCareAmtB = 0;
+            let totalMainQtyA = 0, totalMainQtyB = 0;
+
             careProducts.forEach(product => {
                 // 從 careByClass5 取得 Care 數量和金額
                 const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
@@ -973,9 +977,21 @@
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
+                // 累加到總計
+                totalCareQtyA += careQtyA;
+                totalCareQtyB += careQtyB;
+                totalCareAmtA += careAmtA;
+                totalCareAmtB += careAmtB;
+
                 // 主機數量
                 const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
                 const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
+
+                // 累加主機數量到總計（排除 Care）
+                if (product.mainCategory !== 'Care') {
+                    totalMainQtyA += mainQtyA;
+                    totalMainQtyB += mainQtyB;
+                }
 
                 // 搭售率
                 const rateA = mainQtyA > 0 ? (careQtyA / mainQtyA * 100) : 0;  // 去年
@@ -1008,6 +1024,37 @@
                 `;
                 tbody.appendChild(row);
             });
+
+            // 加入總計列
+            const totalQtyGrowth = totalCareQtyA !== 0 ? ((totalCareQtyB - totalCareQtyA) / totalCareQtyA * 100) : 0;
+            const totalAmtGrowth = totalCareAmtA !== 0 ? ((totalCareAmtB - totalCareAmtA) / totalCareAmtA * 100) : 0;
+            const totalRateA = totalMainQtyA > 0 ? (totalCareQtyA / totalMainQtyA * 100) : 0;
+            const totalRateB = totalMainQtyB > 0 ? (totalCareQtyB / totalMainQtyB * 100) : 0;
+            const totalRateDiff = totalRateB - totalRateA;
+
+            const totalQtyClass = totalQtyGrowth > 0 ? 'positive' : totalQtyGrowth < 0 ? 'negative' : 'neutral';
+            const totalAmtClass = totalAmtGrowth > 0 ? 'positive' : totalAmtGrowth < 0 ? 'negative' : 'neutral';
+            const totalRateClass = totalRateDiff > 0 ? 'positive' : totalRateDiff < 0 ? 'negative' : 'neutral';
+            const totalQtySign = totalQtyGrowth > 0 ? '+' : '';
+            const totalAmtSign = totalAmtGrowth > 0 ? '+' : '';
+            const totalRateSign = totalRateDiff > 0 ? '+' : '';
+
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'rgba(255, 255, 255, 0.08)';
+            totalRow.style.fontWeight = '600';
+            totalRow.innerHTML = `
+                <td class="store-name">總計</td>
+                <td>${Math.round(totalCareQtyA).toLocaleString()}</td>
+                <td>${Math.round(totalCareQtyB).toLocaleString()}</td>
+                <td><span class="growth ${totalQtyClass}">${totalQtySign}${totalQtyGrowth.toFixed(1)}%</span></td>
+                <td>${Math.round(totalCareAmtA).toLocaleString()}</td>
+                <td>${Math.round(totalCareAmtB).toLocaleString()}</td>
+                <td><span class="growth ${totalAmtClass}">${totalAmtSign}${totalAmtGrowth.toFixed(1)}%</span></td>
+                <td class="rate-value" style="color: #fb923c;">${totalRateA.toFixed(2)}%</td>
+                <td class="rate-value" style="color: #4ade80;">${totalRateB.toFixed(2)}%</td>
+                <td><span class="growth ${totalRateClass}">${totalRateSign}${totalRateDiff.toFixed(2)}%</span></td>
+            `;
+            tbody.appendChild(totalRow);
         }
 
         function formatGrowth(value) {
@@ -1069,6 +1116,10 @@
                 { name: 'Audio', class5: 'Audio', mainCategory: 'Audio' }
             ];
 
+            // 總計變數
+            let totalCareQtyA = 0, totalCareQtyB = 0, totalCareAmtA = 0, totalCareAmtB = 0;
+            let totalMainQtyA = 0, totalMainQtyB = 0;
+
             careProducts.forEach(product => {
                 const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
                 const careQtyA = careData.qtyA;  // 去年
@@ -1076,9 +1127,21 @@
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
+                // 累加到總計
+                totalCareQtyA += careQtyA;
+                totalCareQtyB += careQtyB;
+                totalCareAmtA += careAmtA;
+                totalCareAmtB += careAmtB;
+
                 // 主機數量
                 const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
                 const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
+
+                // 累加主機數量
+                if (product.mainCategory !== 'Care') {
+                    totalMainQtyA += mainQtyA;
+                    totalMainQtyB += mainQtyB;
+                }
 
                 // 搭售率
                 const rateA = mainQtyA > 0 ? (careQtyA / mainQtyA * 100) : 0;
@@ -1097,6 +1160,21 @@
                 csv += `${rateA.toFixed(2)}%,${rateB.toFixed(2)}%,`;
                 csv += `${rateDiff.toFixed(2)}%\n`;
             });
+
+            // 加入總計列
+            const totalQtyGrowth = totalCareQtyA !== 0 ? ((totalCareQtyB - totalCareQtyA) / totalCareQtyA * 100) : 0;
+            const totalAmtGrowth = totalCareAmtA !== 0 ? ((totalCareAmtB - totalCareAmtA) / totalCareAmtA * 100) : 0;
+            const totalRateA = totalMainQtyA > 0 ? (totalCareQtyA / totalMainQtyA * 100) : 0;
+            const totalRateB = totalMainQtyB > 0 ? (totalCareQtyB / totalMainQtyB * 100) : 0;
+            const totalRateDiff = totalRateB - totalRateA;
+
+            csv += `總計,`;
+            csv += `${Math.round(totalCareQtyA)},${Math.round(totalCareQtyB)},`;
+            csv += `${totalQtyGrowth.toFixed(2)}%,`;
+            csv += `${Math.round(totalCareAmtA)},${Math.round(totalCareAmtB)},`;
+            csv += `${totalAmtGrowth.toFixed(2)}%,`;
+            csv += `${totalRateA.toFixed(2)}%,${totalRateB.toFixed(2)}%,`;
+            csv += `${totalRateDiff.toFixed(2)}%\n`;
 
             // 產生下載
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
