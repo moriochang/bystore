@@ -955,39 +955,38 @@
             const tbody = document.getElementById('careTableBody');
             tbody.innerHTML = '';
 
-            // Care 產品對應（class5 → 顯示名稱和主機類別）
+            // Care 产品对应 - 注意：Audio class5 包含所有音频产品（AirPods, HomePod等）
             const careProducts = [
                 { name: 'CPU', class5: 'CPU', mainCategory: 'CPU' },
                 { name: 'iPad', class5: 'iPad', mainCategory: 'iPad' },
                 { name: 'iPhone', class5: 'iPhone', mainCategory: 'iPhone' },
                 { name: 'Apple Watch', class5: 'AW', mainCategory: 'Apple Watch' },
-                { name: 'AirPods', class5: 'AirPods', mainCategory: 'AirPods' },
-                { name: 'Audio', class5: 'Audio', mainCategory: 'Audio' }
+                { name: 'AirPods', class5: 'Audio', mainCategory: 'AirPods' }  // Audio class5 → 显示为 AirPods
             ];
 
-            // 總計變數
+            // 总计变数
             let totalCareQtyA = 0, totalCareQtyB = 0, totalCareAmtA = 0, totalCareAmtB = 0;
             let totalMainQtyA = 0, totalMainQtyB = 0;
 
             careProducts.forEach(product => {
-                // 從 careByClass5 取得 Care 數量和金額
+                // 从 careByClass5 取得 Care 数量和金额
                 const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
                 const careQtyA = careData.qtyA;  // A = 去年
                 const careQtyB = careData.qtyB;  // B = 今年
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
-                // 累加到總計
+                // 累加到总计
                 totalCareQtyA += careQtyA;
                 totalCareQtyB += careQtyB;
                 totalCareAmtA += careAmtA;
                 totalCareAmtB += careAmtB;
 
-                // 主機數量
+                // 主机数量
                 const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
                 const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
 
-                // 累加主機數量到總計（排除 Care）
+                // 累加主机数量到总计（排除 Care）
                 if (product.mainCategory !== 'Care') {
                     totalMainQtyA += mainQtyA;
                     totalMainQtyB += mainQtyB;
@@ -998,7 +997,7 @@
                 const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;  // 今年
                 const rateDiff = rateB - rateA;
 
-                // 成長率 = (今年 - 去年) / 去年 * 100
+                // 成长率 = (今年 - 去年) / 去年 * 100
                 const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100).toFixed(1) : 0;
                 const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100).toFixed(1) : 0;
 
@@ -1025,7 +1024,7 @@
                 tbody.appendChild(row);
             });
 
-            // 加入總計列
+            // 加入总计列
             const totalQtyGrowth = totalCareQtyA !== 0 ? ((totalCareQtyB - totalCareQtyA) / totalCareQtyA * 100) : 0;
             const totalAmtGrowth = totalCareAmtA !== 0 ? ((totalCareAmtB - totalCareAmtA) / totalCareAmtA * 100) : 0;
             const totalRateA = totalMainQtyA > 0 ? (totalCareQtyA / totalMainQtyA * 100) : 0;
@@ -1043,7 +1042,7 @@
             totalRow.style.background = 'rgba(255, 255, 255, 0.08)';
             totalRow.style.fontWeight = '600';
             totalRow.innerHTML = `
-                <td class="store-name">總計</td>
+                <td class="store-name">总计</td>
                 <td>${Math.round(totalCareQtyA).toLocaleString()}</td>
                 <td>${Math.round(totalCareQtyB).toLocaleString()}</td>
                 <td><span class="growth ${totalQtyClass}">${totalQtySign}${totalQtyGrowth.toFixed(1)}%</span></td>
@@ -1103,20 +1102,19 @@
                 csv += `${(profitRateB - profitRateA).toFixed(2)}%\n`;
             });
 
-            // 第二部分：Care 產品搭售率分析
-            csv += '\n\nCare 產品搭售率分析\n';
-            csv += '產品類別,去年數量,今年數量,數量成長率,去年金額,今年金額,金額成長率,去年搭售率,今年搭售率,搭售率差異\n';
+            // 第二部分：Care 产品搭售率分析
+            csv += '\n\nCare 产品搭售率分析\n';
+            csv += '产品类别,去年数量,今年数量,数量成长率,去年金额,今年金额,金额成长率,去年搭售率,今年搭售率,搭售率差异\n';
             
             const careProducts = [
                 { name: 'CPU', class5: 'CPU', mainCategory: 'CPU' },
                 { name: 'iPad', class5: 'iPad', mainCategory: 'iPad' },
                 { name: 'iPhone', class5: 'iPhone', mainCategory: 'iPhone' },
                 { name: 'Apple Watch', class5: 'AW', mainCategory: 'Apple Watch' },
-                { name: 'AirPods', class5: 'AirPods', mainCategory: 'AirPods' },
-                { name: 'Audio', class5: 'Audio', mainCategory: 'Audio' }
+                { name: 'AirPods', class5: 'Audio', mainCategory: 'AirPods' }  // Audio class5 → 显示为 AirPods
             ];
 
-            // 總計變數
+            // 总计变数
             let totalCareQtyA = 0, totalCareQtyB = 0, totalCareAmtA = 0, totalCareAmtB = 0;
             let totalMainQtyA = 0, totalMainQtyB = 0;
 
@@ -1127,17 +1125,17 @@
                 const careAmtA = careData.amtA;
                 const careAmtB = careData.amtB;
 
-                // 累加到總計
+                // 累加到总计
                 totalCareQtyA += careQtyA;
                 totalCareQtyB += careQtyB;
                 totalCareAmtA += careAmtA;
                 totalCareAmtB += careAmtB;
 
-                // 主機數量
+                // 主机数量
                 const mainQtyA = data.categories[product.mainCategory].qtyA;  // 去年
                 const mainQtyB = data.categories[product.mainCategory].qtyB;  // 今年
 
-                // 累加主機數量
+                // 累加主机数量
                 if (product.mainCategory !== 'Care') {
                     totalMainQtyA += mainQtyA;
                     totalMainQtyB += mainQtyB;
@@ -1148,7 +1146,7 @@
                 const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;
                 const rateDiff = rateB - rateA;
 
-                // 成長率
+                // 成长率
                 const qtyGrowth = careQtyA !== 0 ? ((careQtyB - careQtyA) / careQtyA * 100) : 0;
                 const amtGrowth = careAmtA !== 0 ? ((careAmtB - careAmtA) / careAmtA * 100) : 0;
 
@@ -1161,14 +1159,14 @@
                 csv += `${rateDiff.toFixed(2)}%\n`;
             });
 
-            // 加入總計列
+            // 加入总计列
             const totalQtyGrowth = totalCareQtyA !== 0 ? ((totalCareQtyB - totalCareQtyA) / totalCareQtyA * 100) : 0;
             const totalAmtGrowth = totalCareAmtA !== 0 ? ((totalCareAmtB - totalCareAmtA) / totalCareAmtA * 100) : 0;
             const totalRateA = totalMainQtyA > 0 ? (totalCareQtyA / totalMainQtyA * 100) : 0;
             const totalRateB = totalMainQtyB > 0 ? (totalCareQtyB / totalMainQtyB * 100) : 0;
             const totalRateDiff = totalRateB - totalRateA;
 
-            csv += `總計,`;
+            csv += `总计,`;
             csv += `${Math.round(totalCareQtyA)},${Math.round(totalCareQtyB)},`;
             csv += `${totalQtyGrowth.toFixed(2)}%,`;
             csv += `${Math.round(totalCareAmtA)},${Math.round(totalCareAmtB)},`;
@@ -1176,7 +1174,7 @@
             csv += `${totalRateA.toFixed(2)}%,${totalRateB.toFixed(2)}%,`;
             csv += `${totalRateDiff.toFixed(2)}%\n`;
 
-            // 產生下載
+            // 产生下载
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
