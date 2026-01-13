@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iStore 門市銷售報表分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .excel-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #21A366 0%, #107C41 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(33, 163, 102, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            flex: 1;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .file-input-group {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .file-input-group:hover {
+            border-color: rgba(0, 122, 255, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .file-input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #b0b0b0;
+        }
+
+        .file-input-group.file-a label {
+            color: #4ade80;
+        }
+
+        .file-input-group.file-b label {
+            color: #fb923c;
+        }
+
+        .file-input-group.file-ref label {
+            color: #60a5fa;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: #0066dd;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            padding: 16px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            background: #0066dd;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .store-selector {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .store-selector.active {
+            display: block;
+        }
+
+        .store-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .store-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .store-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .store-btn.active {
+            background: #007aff;
+            border-color: #007aff;
+            color: white;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #b0b0b0;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .summary-subvalue {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .care-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .care-table thead {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .care-table th,
+        .care-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .care-table th {
+            color: #b0b0b0;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .care-table td {
+            color: #e0e0e0;
+            font-size: 15px;
+        }
+
+        .care-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .care-table .store-name {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .care-table .rate-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .growth {
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .growth.positive {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .growth.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .growth.neutral {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+        }
+
+        .export-section {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .care-table {
+                font-size: 14px;
+            }
+
+            .care-table th,
+            .care-table td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <div class="excel-icon">📊</div>
+                <h1>iStore 門市銷售報表分析</h1>
+            </div>
+            
+            <div class="upload-grid">
+                <div class="file-input-group file-a">
+                    <label>📁 對比A檔案 (綠色 - 今年)</label>
+                    <input type="file" id="fileA" accept=".xlsx,.xls">
+                </div>
+                <div class="file-input-group file-b">
+                    <label>📁 對比B檔案 (橘色 - 去年)</label>
+                    <input type="file" id="fileB" accept=".xlsx,.xls">
+                </div>
+                <div class="file-input-group file-ref">
+                    <label>📚 參照資料檔案 (lizan_reference.xlsx)</label>
+                    <input type="file" id="fileRef" accept=".xlsx">
+                </div>
+            </div>
+            
+            <button class="analyze-btn" id="analyzeBtn" disabled>開始分析</button>
+        </header>
+
+        <div class="store-selector" id="storeSelector">
+            <div class="section-title">🏪 選擇門市</div>
+            <div class="store-buttons" id="storeButtons"></div>
+        </div>
+
+        <div class="results" id="results">
+            <!-- 1. 銷售分析結果與年度對比 -->
+            <div class="section">
+                <div class="section-title">
+                    <span>🎯</span>
+                    <span>銷售分析結果與年度對比</span>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="care-table" id="categoryComparisonTable">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="vertical-align: middle;">品項</th>
+                                <th colspan="3" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">銷售數量</th>
+                                <th colspan="3" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">銷售金額</th>
+                                <th colspan="3" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">毛利額</th>
+                                <th colspan="3" style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">毛利率</th>
+                            </tr>
+                            <tr>
+                                <th>去年</th>
+                                <th>今年</th>
+                                <th>成長率</th>
+                                <th>去年</th>
+                                <th>今年</th>
+                                <th>成長率</th>
+                                <th>去年</th>
+                                <th>今年</th>
+                                <th>成長率</th>
+                                <th>去年</th>
+                                <th>今年</th>
+                                <th>差異</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryComparisonBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. 總計摘要 -->
+            <div class="section">
+                <div class="section-title">
+                    <span>📈</span>
+                    <span>總計摘要</span>
+                </div>
+                <div class="summary-grid" id="summaryGrid"></div>
+            </div>
+
+            <!-- 3. Care 產品搭售率分析 -->
+            <div class="section">
+                <div class="section-title">
+                    <span>🛡️</span>
+                    <span>Care 產品搭售率分析</span>
+                </div>
+                <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 14px;">
+                    ※ 搭售率 = (ACPP+ + iCPP) / 主機銷售數量 × 100%
+                </p>
+                <table class="care-table">
+                    <thead>
+                        <tr>
+                            <th>產品類別</th>
+                            <th>今年數量</th>
+                            <th>去年數量</th>
+                            <th>數量成長</th>
+                            <th>今年金額</th>
+                            <th>去年金額</th>
+                            <th>金額成長</th>
+                            <th>今年搭售率</th>
+                            <th>去年搭售率</th>
+                            <th>差異</th>
+                        </tr>
+                    </thead>
+                    <tbody id="careTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 匯出功能 -->
+            <div class="export-section">
+                <button class="export-btn" onclick="exportToCSV()">📥 匯出 CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fileAData = null;
+        let fileBData = null;
+        let referenceData = null;
+        let allStoresData = {};
+        let currentStore = '0';
+
+        const fileAInput = document.getElementById('fileA');
+        const fileBInput = document.getElementById('fileB');
+        const fileRefInput = document.getElementById('fileRef');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        const targetCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Audio', 'Care', 'Accy', '3rd Party'];
+
+        fileAInput.addEventListener('change', checkFiles);
+        fileBInput.addEventListener('change', checkFiles);
+        fileRefInput.addEventListener('change', checkFiles);
+        analyzeBtn.addEventListener('click', analyzeData);
+
+        function checkFiles() {
+            analyzeBtn.disabled = !(fileAInput.files.length > 0 && 
+                                   fileBInput.files.length > 0 && 
+                                   fileRefInput.files.length > 0);
+        }
+
+        function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        resolve(workbook);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function analyzeData() {
+            try {
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = '分析中...';
+
+                // 讀取三個檔案
+                const [wbA, wbB, wbRef] = await Promise.all([
+                    readExcelFile(fileAInput.files[0]),
+                    readExcelFile(fileBInput.files[0]),
+                    readExcelFile(fileRefInput.files[0])
+                ]);
+
+                // 解析參照資料
+                referenceData = parseReferenceData(wbRef);
+
+                // 解析銷售資料
+                fileAData = parseSalesData(wbA);
+                fileBData = parseSalesData(wbB);
+
+                // 處理所有門市資料
+                processAllStores();
+
+                // 顯示門市選擇器
+                displayStoreSelector();
+
+                // 預設顯示全社
+                displayStoreData('0');
+
+                document.getElementById('storeSelector').classList.add('active');
+                document.getElementById('results').classList.add('active');
+                
+                analyzeBtn.textContent = '重新分析';
+            } catch (error) {
+                console.error('分析錯誤:', error);
+                alert('檔案分析錯誤：' + error.message);
+                analyzeBtn.textContent = '開始分析';
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function parseReferenceData(workbook) {
+            const reference = {
+                products: {},
+                care: {}
+            };
+
+            // 解析「立展」工作表
+            const lizanSheet = workbook.Sheets['立展'];
+            if (lizanSheet) {
+                const lizanData = XLSX.utils.sheet_to_json(lizanSheet);
+                lizanData.forEach(row => {
+                    if (row.Code) {
+                        reference.products[row.Code] = {
+                            大分類: row['大分類'],
+                            中分類: row['中分類'],
+                            小分類: row['小分類']
+                        };
+                    }
+                });
+            }
+
+            // 解析「Care」工作表
+            const careSheet = workbook.Sheets['Care'];
+            if (careSheet) {
+                const careData = XLSX.utils.sheet_to_json(careSheet);
+                careData.forEach(row => {
+                    if (row.Code) {
+                        reference.care[row.Code] = {
+                            大分類: row['大分類'],
+                            中分類: row['中分類'],
+                            小分類: row['小分類'],
+                            class5: row.class5  // CPU, iPad, iPhone, AW, AirPods, Audio
+                        };
+                    }
+                });
+            }
+
+            return reference;
+        }
+
+        function parseSalesData(workbook) {
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(worksheet);
+            
+            return data.map(row => ({
+                storeCode: row.store_code_id,
+                storeName: row.store_name1,
+                productCode: row.product_code,
+                productName: row.product_name,
+                qty: parseFloat(row.total_qty) || 0,
+                amt: parseFloat(row.total_amt_t1) || 0,
+                cost: parseFloat(row.total_cost) || 0,
+                adjCost: parseFloat(row.total_ADJ_COST) || 0
+            }));
+        }
+
+        function processAllStores() {
+            allStoresData = {};
+            
+            // 收集所有門市（使用 store_code_id）
+            const storeMap = new Map();
+            fileAData.forEach(row => {
+                if (row.storeCode && row.storeName) {
+                    storeMap.set(row.storeCode, row.storeName);
+                }
+            });
+            fileBData.forEach(row => {
+                if (row.storeCode && row.storeName) {
+                    storeMap.set(row.storeCode, row.storeName);
+                }
+            });
+
+            // 處理每個門市
+            storeMap.forEach((storeName, storeCode) => {
+                const storeDataA = fileAData.filter(r => r.storeCode === storeCode);
+                const storeDataB = fileBData.filter(r => r.storeCode === storeCode);
+                
+                allStoresData[storeCode] = {
+                    ...processStoreData(storeDataA, storeDataB),
+                    storeName: storeName,
+                    storeCode: storeCode
+                };
+            });
+
+            // 計算全社（所有門市加總）
+            allStoresData['0'] = {
+                ...processStoreData(fileAData, fileBData),
+                storeName: '全社',
+                storeCode: '0'
+            };
+        }
+
+        function processStoreData(dataA, dataB) {
+            const result = {
+                categories: {},
+                careByClass5: {}  // 改用 class5 統計
+            };
+
+            // 初始化各大分類
+            targetCategories.forEach(category => {
+                result.categories[category] = {
+                    qtyA: 0,
+                    qtyB: 0,
+                    amtA: 0,
+                    amtB: 0,
+                    costA: 0,
+                    costB: 0
+                };
+            });
+
+            // 初始化 Care 的 class5 統計
+            const careClass5List = ['CPU', 'iPad', 'iPhone', 'AW', 'AirPods', 'Audio'];
+            careClass5List.forEach(class5 => {
+                result.careByClass5[class5] = {
+                    qtyA: 0,
+                    qtyB: 0,
+                    amtA: 0,
+                    amtB: 0
+                };
+            });
+
+            // 處理對比A（今年）
+            dataA.forEach(row => {
+                // 先檢查是否為 Care 產品
+                const careData = referenceData.care[row.productCode];
+                if (careData) {
+                    // 是 Care 產品
+                    const class5 = careData.class5;
+                    if (class5 && result.careByClass5[class5]) {
+                        result.careByClass5[class5].qtyA += row.qty;
+                        result.careByClass5[class5].amtA += row.amt;
+                    }
+                    
+                    // Care 也要計入大分類統計
+                    if (result.categories['Care']) {
+                        result.categories['Care'].qtyA += row.qty;
+                        result.categories['Care'].amtA += row.amt;
+                        result.categories['Care'].costA += row.cost;
+                        result.categories['Care'].costA -= row.adjCost;
+                    }
+                } else {
+                    // 不是 Care 產品，從立展工作表查詢
+                    const refData = referenceData.products[row.productCode];
+                    if (refData) {
+                        const category = refData['大分類'];
+                        
+                        if (result.categories[category]) {
+                            result.categories[category].qtyA += row.qty;
+                            result.categories[category].amtA += row.amt;
+                            result.categories[category].costA += row.cost;
+                            result.categories[category].costA -= row.adjCost;
+                        }
+                    }
+                }
+            });
+
+            // 處理對比B（去年）
+            dataB.forEach(row => {
+                const careData = referenceData.care[row.productCode];
+                if (careData) {
+                    const class5 = careData.class5;
+                    if (class5 && result.careByClass5[class5]) {
+                        result.careByClass5[class5].qtyB += row.qty;
+                        result.careByClass5[class5].amtB += row.amt;
+                    }
+                    
+                    if (result.categories['Care']) {
+                        result.categories['Care'].qtyB += row.qty;
+                        result.categories['Care'].amtB += row.amt;
+                        result.categories['Care'].costB += row.cost;
+                        result.categories['Care'].costB -= row.adjCost;
+                    }
+                } else {
+                    const refData = referenceData.products[row.productCode];
+                    if (refData) {
+                        const category = refData['大分類'];
+                        
+                        if (result.categories[category]) {
+                            result.categories[category].qtyB += row.qty;
+                            result.categories[category].amtB += row.amt;
+                            result.categories[category].costB += row.cost;
+                            result.categories[category].costB -= row.adjCost;
+                        }
+                    }
+                }
+            });
+
+            return result;
+        }
+
+        function displayStoreSelector() {
+            const storeButtons = document.getElementById('storeButtons');
+            storeButtons.innerHTML = '';
+
+            // 只顯示指定的門市
+            const targetStores = ['0', '75', '76', '77', '81', '84'];
+
+            targetStores.forEach(storeCode => {
+                if (!allStoresData[storeCode]) return;  // 如果該門市沒有資料則跳過
+                
+                const btn = document.createElement('button');
+                btn.className = storeCode === '0' ? 'store-btn active' : 'store-btn';
+                btn.textContent = storeCode === '0' ? '0 - 全社' : storeCode;
+                btn.onclick = () => selectStore(storeCode);
+                storeButtons.appendChild(btn);
+            });
+        }
+
+        function selectStore(storeCode) {
+            currentStore = storeCode;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.store-btn').forEach(btn => {
+                const btnCode = btn.textContent.split(' ')[0];
+                btn.classList.toggle('active', btnCode === storeCode);
+            });
+
+            displayStoreData(storeCode);
+        }
+
+        function displayStoreData(storeCode) {
+            const data = allStoresData[storeCode];
+            if (!data) return;
+
+            displayCategoryComparison(data);
+            displaySummary(data);
+            displayCareAnalysis(data);
+        }
+
+        function displayCategoryComparison(data) {
+            const tbody = document.getElementById('categoryComparisonBody');
+            tbody.innerHTML = '';
+
+            // 計算總計（排除 Care）
+            let totalQtyA = 0, totalQtyB = 0, totalAmtA = 0, totalAmtB = 0;
+            let totalProfitA = 0, totalProfitB = 0;
+            
+            targetCategories.forEach(category => {
+                if (category === 'Care') return;
+                
+                const stats = data.categories[category];
+                totalQtyA += stats.qtyA;
+                totalQtyB += stats.qtyB;
+                totalAmtA += stats.amtA;
+                totalAmtB += stats.amtB;
+                totalProfitA += (stats.amtA - stats.costA);
+                totalProfitB += (stats.amtB - stats.costB);
+            });
+
+            // 顯示各分類
+            targetCategories.forEach(category => {
+                const stats = data.categories[category];
+                
+                const qtyGrowth = stats.qtyB !== 0 ? ((stats.qtyA - stats.qtyB) / stats.qtyB * 100) : 0;
+                const amtGrowth = stats.amtB !== 0 ? ((stats.amtA - stats.amtB) / stats.amtB * 100) : 0;
+                const profitA = stats.amtA - stats.costA;
+                const profitB = stats.amtB - stats.costB;
+                const profitGrowth = profitB !== 0 ? ((profitA - profitB) / profitB * 100) : 0;
+                const profitRateA = stats.amtA > 0 ? (profitA / stats.amtA * 100) : 0;
+                const profitRateB = stats.amtB > 0 ? (profitB / stats.amtB * 100) : 0;
+                const profitRateDiff = profitRateA - profitRateB;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="store-name">${category}</td>
+                    <td>${Math.round(stats.qtyB).toLocaleString()}</td>
+                    <td>${Math.round(stats.qtyA).toLocaleString()}</td>
+                    <td>${formatGrowth(qtyGrowth)}</td>
+                    <td>${Math.round(stats.amtB).toLocaleString()}</td>
+                    <td>${Math.round(stats.amtA).toLocaleString()}</td>
+                    <td>${formatGrowth(amtGrowth)}</td>
+                    <td>${Math.round(profitB).toLocaleString()}</td>
+                    <td>${Math.round(profitA).toLocaleString()}</td>
+                    <td>${formatGrowth(profitGrowth)}</td>
+                    <td>${profitRateB.toFixed(2)}%</td>
+                    <td>${profitRateA.toFixed(2)}%</td>
+                    <td>${formatDifference(profitRateDiff)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 加入總計列
+            const totalQtyGrowth = totalQtyB !== 0 ? ((totalQtyA - totalQtyB) / totalQtyB * 100) : 0;
+            const totalAmtGrowth = totalAmtB !== 0 ? ((totalAmtA - totalAmtB) / totalAmtB * 100) : 0;
+            const totalProfitGrowth = totalProfitB !== 0 ? ((totalProfitA - totalProfitB) / totalProfitB * 100) : 0;
+            const totalProfitRateA = totalAmtA > 0 ? (totalProfitA / totalAmtA * 100) : 0;
+            const totalProfitRateB = totalAmtB > 0 ? (totalProfitB / totalAmtB * 100) : 0;
+            const totalProfitRateDiff = totalProfitRateA - totalProfitRateB;
+
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'rgba(255, 255, 255, 0.08)';
+            totalRow.style.fontWeight = '600';
+            totalRow.innerHTML = `
+                <td class="store-name">總計 (排除Care)</td>
+                <td>${Math.round(totalQtyB).toLocaleString()}</td>
+                <td>${Math.round(totalQtyA).toLocaleString()}</td>
+                <td>${formatGrowth(totalQtyGrowth)}</td>
+                <td>${Math.round(totalAmtB).toLocaleString()}</td>
+                <td>${Math.round(totalAmtA).toLocaleString()}</td>
+                <td>${formatGrowth(totalAmtGrowth)}</td>
+                <td>${Math.round(totalProfitB).toLocaleString()}</td>
+                <td>${Math.round(totalProfitA).toLocaleString()}</td>
+                <td>${formatGrowth(totalProfitGrowth)}</td>
+                <td>${totalProfitRateB.toFixed(2)}%</td>
+                <td>${totalProfitRateA.toFixed(2)}%</td>
+                <td>${formatDifference(totalProfitRateDiff)}</td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        function displaySummary(data) {
+            const container = document.getElementById('summaryGrid');
+            
+            // 計算總計（排除 Care）
+            let totalAmtA = 0, totalAmtB = 0, totalCostA = 0, totalCostB = 0;
+            
+            targetCategories.forEach(category => {
+                if (category === 'Care') return;
+                const stats = data.categories[category];
+                totalAmtA += stats.amtA;
+                totalAmtB += stats.amtB;
+                totalCostA += stats.costA;
+                totalCostB += stats.costB;
+            });
+            
+            const profitA = totalAmtA - totalCostA;
+            const profitB = totalAmtB - totalCostB;
+            const profitGrowth = profitB !== 0 ? ((profitA - profitB) / profitB * 100).toFixed(1) : 0;
+            const profitGrowthClass = profitGrowth > 0 ? 'positive' : profitGrowth < 0 ? 'negative' : 'neutral';
+            const profitSign = profitGrowth > 0 ? '+' : '';
+
+            container.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-label">今年銷售額</div>
+                    <div class="summary-value" style="color: #4ade80;">
+                        ${(totalAmtA / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
+                    </div>
+                    <div class="summary-subvalue">對比A</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-label">去年銷售額</div>
+                    <div class="summary-value" style="color: #fb923c;">
+                        ${(totalAmtB / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
+                    </div>
+                    <div class="summary-subvalue">對比B</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-label">今年毛利</div>
+                    <div class="summary-value" style="color: #60a5fa;">
+                        ${(profitA / 1000).toLocaleString(undefined, {maximumFractionDigits: 0})}K
+                    </div>
+                    <div class="summary-subvalue">毛利率 ${totalAmtA > 0 ? (profitA / totalAmtA * 100).toFixed(1) : 0}%</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-label">毛利成長</div>
+                    <div class="summary-value">
+                        <span class="growth ${profitGrowthClass}">${profitSign}${profitGrowth}%</span>
+                    </div>
+                    <div class="summary-subvalue">年度對比</div>
+                </div>
+            `;
+        }
+
+        function displayCareAnalysis(data) {
+            const tbody = document.getElementById('careTableBody');
+            tbody.innerHTML = '';
+
+            // Care 產品對應（class5 → 顯示名稱和主機類別）
+            const careProducts = [
+                { name: 'CPU', class5: 'CPU', mainCategory: 'CPU' },
+                { name: 'iPad', class5: 'iPad', mainCategory: 'iPad' },
+                { name: 'iPhone', class5: 'iPhone', mainCategory: 'iPhone' },
+                { name: 'Apple Watch', class5: 'AW', mainCategory: 'Apple Watch' },
+                { name: 'AirPods', class5: 'AirPods', mainCategory: 'AirPods' },
+                { name: 'Audio', class5: 'Audio', mainCategory: 'Audio' }
+            ];
+
+            careProducts.forEach(product => {
+                // 從 careByClass5 取得 Care 數量和金額
+                const careData = data.careByClass5[product.class5] || { qtyA: 0, qtyB: 0, amtA: 0, amtB: 0 };
+                const careQtyA = careData.qtyA;
+                const careQtyB = careData.qtyB;
+                const careAmtA = careData.amtA;
+                const careAmtB = careData.amtB;
+
+                // 主機數量
+                const mainQtyA = data.categories[product.mainCategory].qtyA;
+                const mainQtyB = data.categories[product.mainCategory].qtyB;
+
+                // 搭售率
+                const rateA = mainQtyA > 0 ? (careQtyA / mainQtyA * 100) : 0;
+                const rateB = mainQtyB > 0 ? (careQtyB / mainQtyB * 100) : 0;
+                const rateDiff = rateA - rateB;
+
+                // 成長率
+                const qtyGrowth = careQtyB !== 0 ? ((careQtyA - careQtyB) / careQtyB * 100).toFixed(1) : 0;
+                const amtGrowth = careAmtB !== 0 ? ((careAmtA - careAmtB) / careAmtB * 100).toFixed(1) : 0;
+
+                const qtyClass = qtyGrowth > 0 ? 'positive' : qtyGrowth < 0 ? 'negative' : 'neutral';
+                const amtClass = amtGrowth > 0 ? 'positive' : amtGrowth < 0 ? 'negative' : 'neutral';
+                const rateClass = rateDiff > 0 ? 'positive' : rateDiff < 0 ? 'negative' : 'neutral';
+                const qtySign = qtyGrowth > 0 ? '+' : '';
+                const amtSign = amtGrowth > 0 ? '+' : '';
+                const rateSign = rateDiff > 0 ? '+' : '';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="store-name">${product.name}</td>
+                    <td>${Math.round(careQtyA).toLocaleString()}</td>
+                    <td>${Math.round(careQtyB).toLocaleString()}</td>
+                    <td><span class="growth ${qtyClass}">${qtySign}${qtyGrowth}%</span></td>
+                    <td>${Math.round(careAmtA).toLocaleString()}</td>
+                    <td>${Math.round(careAmtB).toLocaleString()}</td>
+                    <td><span class="growth ${amtClass}">${amtSign}${amtGrowth}%</span></td>
+                    <td class="rate-value" style="color: #4ade80;">${rateA.toFixed(2)}%</td>
+                    <td class="rate-value" style="color: #fb923c;">${rateB.toFixed(2)}%</td>
+                    <td><span class="growth ${rateClass}">${rateSign}${rateDiff.toFixed(2)}%</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function formatGrowth(value) {
+            const sign = value > 0 ? '+' : '';
+            const className = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+            return `<span class="growth ${className}">${sign}${value.toFixed(2)}%</span>`;
+        }
+
+        function formatDifference(value) {
+            const sign = value > 0 ? '+' : '';
+            const className = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+            return `<span class="growth ${className}">${sign}${value.toFixed(2)}%</span>`;
+        }
+
+        function exportToCSV() {
+            if (!currentStore || !allStoresData[currentStore]) {
+                alert('請先進行分析');
+                return;
+            }
+
+            const data = allStoresData[currentStore];
+            const storeDisplay = currentStore === '0' ? '全社' : `門市${currentStore}`;
+            let csv = '\uFEFF';
+            
+            csv += `${storeDisplay}\n\n`;
+            csv += '銷售分析結果與年度對比\n';
+            csv += '品項,去年數量,今年數量,數量成長率,去年金額,今年金額,金額成長率,去年毛利,今年毛利,毛利成長率,去年毛利率,今年毛利率,毛利率差異\n';
+            
+            targetCategories.forEach(category => {
+                const stats = data.categories[category];
+                const profitA = stats.amtA - stats.costA;
+                const profitB = stats.amtB - stats.costB;
+                const profitRateA = stats.amtA > 0 ? (profitA / stats.amtA * 100) : 0;
+                const profitRateB = stats.amtB > 0 ? (profitB / stats.amtB * 100) : 0;
+                
+                csv += `${category},${Math.round(stats.qtyB)},${Math.round(stats.qtyA)},`;
+                csv += `${stats.qtyB !== 0 ? ((stats.qtyA - stats.qtyB) / stats.qtyB * 100).toFixed(2) : 0}%,`;
+                csv += `${Math.round(stats.amtB)},${Math.round(stats.amtA)},`;
+                csv += `${stats.amtB !== 0 ? ((stats.amtA - stats.amtB) / stats.amtB * 100).toFixed(2) : 0}%,`;
+                csv += `${Math.round(profitB)},${Math.round(profitA)},`;
+                csv += `${profitB !== 0 ? ((profitA - profitB) / profitB * 100).toFixed(2) : 0}%,`;
+                csv += `${profitRateB.toFixed(2)}%,${profitRateA.toFixed(2)}%,`;
+                csv += `${(profitRateA - profitRateB).toFixed(2)}%\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const today = new Date().toISOString().split('T')[0];
+            link.setAttribute('href', url);
+            link.setAttribute('download', `store_report_${currentStore}_${today}.csv`);
+            link.click();
+        }
+    </script>
+</body>
+</html>
