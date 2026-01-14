@@ -558,26 +558,41 @@
             analyzeBtn.textContent = '分析中...';
 
             // 自動載入參照資料
+            console.log('開始載入參照資料...');
             const refResponse = await fetch('data/lizan_reference.xlsx');
+            
+            if (!refResponse.ok) {
+                throw new Error(`無法載入參照資料: ${refResponse.status} ${refResponse.statusText}`);
+            }
+            
             const refArrayBuffer = await refResponse.arrayBuffer();
             const refData = new Uint8Array(refArrayBuffer);
             const wbRef = XLSX.read(refData, { type: 'array' });
+            console.log('參照資料載入成功');
 
             // 讀取兩個上傳的檔案
+            console.log('開始讀取上傳檔案...');
             const [wbA, wbB] = await Promise.all([
                 readExcelFile(fileAInput.files[0]),
                 readExcelFile(fileBInput.files[0])
             ]);
+            console.log('上傳檔案讀取成功');
 
             // 解析參照資料
+            console.log('開始解析參照資料...');
             referenceData = parseReferenceData(wbRef);
+            console.log('參照資料解析完成');
 
             // 解析銷售資料
+            console.log('開始解析銷售資料...');
             fileAData = parseSalesData(wbA);
             fileBData = parseSalesData(wbB);
+            console.log('銷售資料解析完成');
 
             // 處理所有門市資料
+            console.log('開始處理門市資料...');
             processAllStores();
+            console.log('門市資料處理完成');
 
             // 顯示門市選擇器
             displayStoreSelector();
@@ -589,9 +604,11 @@
             document.getElementById('results').classList.add('active');
             
             analyzeBtn.textContent = '重新分析';
+            console.log('分析完成！');
         } catch (error) {
             console.error('分析錯誤:', error);
-            alert('檔案分析錯誤：' + error.message);
+            console.error('錯誤堆疊:', error.stack);
+            alert('檔案分析錯誤：' + error.message + '\n\n請確認：\n1. 已正確上傳兩個對比檔案\n2. 網頁可正常存取 data/lizan_reference.xlsx\n3. 檔案格式正確');
             analyzeBtn.textContent = '開始分析';
         } finally {
             analyzeBtn.disabled = false;
