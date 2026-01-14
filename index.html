@@ -272,7 +272,12 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* 銷售分析結果表格的垂直分隔線 - 在每個大項目（銷售數量/銷售金額/毛利額/毛利率）之後 */
+        /* 銷售分析結果表格的垂直分隔線 - 在品項後和每個區塊的成長率後 */
+        .sales-analysis-table th:nth-child(1),
+        .sales-analysis-table td:nth-child(1) {
+            border-right: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
         .sales-analysis-table th:nth-child(4),
         .sales-analysis-table td:nth-child(4),
         .sales-analysis-table th:nth-child(7),
@@ -282,7 +287,12 @@
             border-right: 2px solid rgba(255, 255, 255, 0.3);
         }
 
-        /* Care 產品搭售率分析表格的垂直分隔線 - 在去年/今年 之後 */
+        /* Care 產品搭售率分析表格的垂直分隔線 - 在產品類別後、去年最後一欄後、今年最後一欄後 */
+        .care-attach-table th:nth-child(1),
+        .care-attach-table td:nth-child(1) {
+            border-right: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
         .care-attach-table th:nth-child(5),
         .care-attach-table td:nth-child(5),
         .care-attach-table th:nth-child(9),
