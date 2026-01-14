@@ -272,31 +272,24 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* 銷售分析結果表格的垂直分隔線 - 在品項後和每個區塊的成長率後 */
-        .sales-analysis-table th:nth-child(1),
-        .sales-analysis-table td:nth-child(1) {
+        /* 銷售分析結果表格的垂直分隔線 - 只在數據行顯示，標題行不顯示 */
+        .sales-analysis-table tbody td:nth-child(1) {
             border-right: 2px solid rgba(255, 255, 255, 0.3);
         }
         
-        .sales-analysis-table th:nth-child(4),
-        .sales-analysis-table td:nth-child(4),
-        .sales-analysis-table th:nth-child(7),
-        .sales-analysis-table td:nth-child(7),
-        .sales-analysis-table th:nth-child(10),
-        .sales-analysis-table td:nth-child(10) {
+        .sales-analysis-table tbody td:nth-child(4),
+        .sales-analysis-table tbody td:nth-child(7),
+        .sales-analysis-table tbody td:nth-child(10) {
             border-right: 2px solid rgba(255, 255, 255, 0.3);
         }
 
-        /* Care 產品搭售率分析表格的垂直分隔線 - 在產品類別後、去年最後一欄後、今年最後一欄後 */
-        .care-attach-table th:nth-child(1),
-        .care-attach-table td:nth-child(1) {
+        /* Care 產品搭售率分析表格的垂直分隔線 - 只在數據行顯示，標題行不顯示 */
+        .care-attach-table tbody td:nth-child(1) {
             border-right: 2px solid rgba(255, 255, 255, 0.3);
         }
         
-        .care-attach-table th:nth-child(5),
-        .care-attach-table td:nth-child(5),
-        .care-attach-table th:nth-child(9),
-        .care-attach-table td:nth-child(9) {
+        .care-attach-table tbody td:nth-child(5),
+        .care-attach-table tbody td:nth-child(9) {
             border-right: 2px solid rgba(255, 255, 255, 0.3);
         }
 
