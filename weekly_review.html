@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iStore 中區週報回顧</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        /* 門市選擇器 */
+        .store-selector {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .store-selector-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4ade80;
+        }
+
+        .store-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .store-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .store-btn:hover {
+            background: rgba(74, 222, 128, 0.1);
+            border-color: rgba(74, 222, 128, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .store-btn.active {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(34, 197, 94, 0.2) 100%);
+            border-color: rgba(74, 222, 128, 0.8);
+            color: #4ade80;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .week-info {
+            font-size: 18px;
+            color: #4ade80;
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 8px;
+            color: #4ade80;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.5);
+        }
+
+        .store-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            page-break-after: always;
+        }
+
+        .store-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .csv-export-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            border-radius: 8px;
+            color: #60a5fa;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .csv-export-btn:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+            border-color: rgba(59, 130, 246, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .store-subtitle {
+            font-size: 16px;
+            color: #9ca3af;
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(74, 222, 128, 0.3);
+        }
+
+        /* 季度總覽標題 - 延伸到右側 */
+        .quarter-overview-header {
+            grid-column: 1 / -1;  /* 跨越所有列 */
+            font-size: 20px;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(74, 222, 128, 0.3);
+        }
+
+        /* Traffic 轉換率標題 - 延伸到右側 */
+        .traffic-overview-header {
+            grid-column: 1 / -1;  /* 跨越所有列 */
+            font-size: 20px;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(74, 222, 128, 0.3);
+        }
+
+        /* 週銷售回顧表格 */
+        .weekly-review-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .weekly-review-table th,
+        .weekly-review-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .weekly-review-table th {
+            background: rgba(74, 222, 128, 0.1);
+            font-weight: 600;
+        }
+
+        .weekly-review-table tbody td:nth-child(1) {
+            font-weight: 600;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        /* 季度總覽 */
+        .quarter-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+            align-items: start;
+        }
+
+        /* 季度總覽圖表容器 - 與表格等高 */
+        .quarter-overview .chart-container {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .quarter-overview .chart-wrapper {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+
+        .quarter-overview .chart-wrapper canvas {
+            max-height: 220px;
+        }
+
+        /* Traffic 轉換率分析 */
+        .traffic-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+            align-items: start;
+        }
+
+        .traffic-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .traffic-table th,
+        .traffic-table td {
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        .traffic-table th {
+            background: rgba(59, 130, 246, 0.1);
+            font-weight: 600;
+        }
+
+        .traffic-table tbody td:nth-child(1) {
+            font-weight: 600;
+        }
+
+        /* Care 產品搭售率分析表格 */
+        .care-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .care-table th,
+        .care-table td {
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        .care-table th {
+            background: rgba(59, 130, 246, 0.1);
+            font-weight: 600;
+        }
+
+        .care-table tbody td:first-child {
+            text-align: left;
+            padding-left: 20px;
+            font-weight: 600;
+        }
+
+        /* Care 區塊樣式 */
+        .care-section {
+            margin-top: 30px;
+        }
+
+        .care-section-header {
+            color: #4ade80;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #4ade80;
+        }
+
+        /* Traffic 圖表容器 - 與表格等高 */
+        .traffic-overview .chart-container {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .traffic-overview .chart-wrapper {
+            position: relative;
+            height: 420px;
+            width: 100%;
+        }
+
+        .traffic-overview .chart-wrapper canvas {
+            max-height: 420px;
+        }
+
+        .overview-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .overview-table th,
+        .overview-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .overview-table th {
+            background: rgba(59, 130, 246, 0.1);
+            font-weight: 600;
+        }
+
+        .overview-table tbody td:nth-child(1) {
+            font-weight: 600;
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        /* 顏色標示 */
+        .positive {
+            color: #4ade80;
+        }
+
+        .negative {
+            color: #f87171;
+        }
+
+        .neutral {
+            color: #9ca3af;
+        }
+
+        /* 差異數字 */
+        .diff-value {
+            font-weight: 600;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #9ca3af;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .store-section {
+                page-break-after: always;
+                background: white;
+                border: 1px solid #ccc;
+            }
+            
+            .back-link {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>iStore 中區週報回顧</h1>
+            <div class="week-info" id="weekInfo">載入中...</div>
+            <a href="index.html" class="back-link">← 返回銷售分析</a>
+        </header>
+
+        <div class="store-selector">
+            <div class="store-selector-title">🏪 選擇門市</div>
+            <div class="store-buttons" id="storeButtons">
+                <!-- 按鈕將由 JavaScript 動態生成 -->
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="loading">正在載入季度數據...</div>
+        </div>
+    </div>
+
+    <script>
+        // 中區門市列表
+        const CENTRAL_STORES = {
+            '75': '中港',
+            '76': '中友',
+            '77': '中三井',
+            '81': '耐斯',
+            '84': '垂楊'
+        };
+
+        // ========== Care 產品搭售率分析函數 ==========
+
+        // 載入 Care 檔案
+        async function loadCareFiles(reviewWeekInfo) {
+            try {
+                // 載入立展參考檔案
+                const refResponse = await fetch('data/lizan_reference.xlsx');
+                const refArrayBuffer = await refResponse.arrayBuffer();
+                const refWorkbook = XLSX.read(new Uint8Array(refArrayBuffer), { type: 'array' });
+                
+                // 解析「立展」工作表 - 建立產品代碼 -> 大分類對照表
+                const lizanSheet = refWorkbook.Sheets['立展'];
+                const lizanRows = XLSX.utils.sheet_to_json(lizanSheet, { header: 1 });
+                
+                const productCategory = {};  // product_code -> 大分類
+                for (let i = 1; i < lizanRows.length; i++) {
+                    const code = lizanRows[i][0];  // Code
+                    const bigCategory = lizanRows[i][2];  // 大分類
+                    if (code && bigCategory) {
+                        productCategory[code.toString()] = bigCategory;
+                    }
+                }
+                
+                console.log(`載入了 ${Object.keys(productCategory).length} 個產品分類`);
+                
+                // 解析「Care」工作表 - 建立 Care 產品代碼 -> class5 對照表
+                const careSheet = refWorkbook.Sheets['Care'];
+                const careRows = XLSX.utils.sheet_to_json(careSheet, { header: 1 });
+                
+                const careClass5 = {};  // product_code -> class5
+                for (let i = 1; i < careRows.length; i++) {
+                    const code = careRows[i][0];  // Code
+                    const class5 = careRows[i][10];  // class5 (第11欄，索引10)
+                    if (code && class5) {
+                        careClass5[code.toString()] = class5;
+                    }
+                }
+                
+                console.log(`載入了 ${Object.keys(careClass5).length} 個 Care 產品分類`);
+                
+                // 根據回顧週次計算檔名
+                // Care 檔案格式：從月初（01日）到回顧週結束日期
+                // 例如：W12 (03-15 ~ 03-21) → 20260301-20260321.xls
+                
+                // 提取回顧週的年月
+                const endDate = reviewWeekInfo.end;  // '2026-03-21'
+                const [year, month, day] = endDate.split('-');
+                
+                // 構建月初日期（01日）
+                const monthStart = `${year}-${month}-01`;
+                
+                // 今年檔名：月初到回顧週結束
+                const thisYearStart = monthStart.replace(/-/g, '');  // '20260301'
+                const thisYearEnd = endDate.replace(/-/g, '');       // '20260321'
+                const thisYearFilename = `${thisYearStart}-${thisYearEnd}.xls`;
+                
+                // 去年同期檔名（年份 -1）
+                const lastYearStart = monthStart.replace(year, String(parseInt(year) - 1)).replace(/-/g, '');
+                const lastYearEnd = endDate.replace(year, String(parseInt(year) - 1)).replace(/-/g, '');
+                const lastYearFilename = `${lastYearStart}-${lastYearEnd}.xls`;
+                
+                console.log(`載入 Care 檔案: ${lastYearFilename}, ${thisYearFilename}`);
+                
+                // 載入今年和去年的 Care 檔案
+                const careDataPromises = [lastYearFilename, thisYearFilename].map(async filename => {
+                    try {
+                        const response = await fetch(`data/care/${filename}`);
+                        if (!response.ok) {
+                            console.warn(`Care 檔案不存在: ${filename}`);
+                            return null;
+                        }
+                        const arrayBuffer = await response.arrayBuffer();
+                        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+                        
+                        // 從檔名提取日期範圍並格式化
+                        // 檔名格式: 20260301-20260314.xls
+                        const dateRange = filename.replace('.xls', '');
+                        const [startStr, endStr] = dateRange.split('-');
+                        
+                        // 格式化為 2026/03/01~03/14
+                        const startFormatted = `${startStr.substring(0, 4)}/${startStr.substring(4, 6)}/${startStr.substring(6, 8)}`;
+                        const endFormatted = `${endStr.substring(4, 6)}/${endStr.substring(6, 8)}`;
+                        const displayDate = `${startFormatted}~${endFormatted}`;
+                        
+                        return {
+                            filename: filename,
+                            date: displayDate,
+                            data: parseCareData(workbook, productCategory, careClass5)
+                        };
+                    } catch (error) {
+                        console.error(`載入 Care 檔案失敗: ${filename}`, error);
+                        return null;
+                    }
+                });
+                
+                const careFiles = (await Promise.all(careDataPromises)).filter(f => f !== null);
+                
+                if (careFiles.length < 2) {
+                    console.warn('Care 檔案載入不完整，可能缺少去年或今年的檔案');
+                    return null;
+                }
+                
+                // 根據日期排序（舊的在前）
+                careFiles.sort((a, b) => a.date.localeCompare(b.date));
+                
+                return {
+                    lastYear: careFiles[0],
+                    thisYear: careFiles[1]
+                };
+            } catch (error) {
+                console.error('載入 Care 檔案失敗:', error);
+                return null;
+            }
+        }
+
+        // 解析 Care 數據
+        function parseCareData(workbook, productCategory, careClass5) {
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            
+            const storeData = {};
+            
+            // 從第2行開始（跳過標題）
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const storeId = row[0]?.toString();
+                const productCode = row[7]?.toString();  // product_code
+                const productName = row[6];  // product_name
+                const classDesc = row[5];  // CLASS_DESCRIPTION
+                const qty = row[12] || 0;   // total_qty
+                const amt = row[13] || 0;   // total_amt
+                
+                if (!storeId || !productCode) continue;
+                
+                if (!storeData[storeId]) {
+                    storeData[storeId] = {
+                        CPU: { st: 0, care: 0, careAmt: 0 },
+                        iPad: { st: 0, care: 0, careAmt: 0 },
+                        iPhone: { st: 0, care: 0, careAmt: 0 },
+                        'Apple Watch': { st: 0, care: 0, careAmt: 0 },
+                        AirPods: { st: 0, care: 0, careAmt: 0 }
+                    };
+                }
+                
+                // 先檢查是否為 Care 產品（使用 class5 或產品名稱判斷）
+                let careCategory = null;
+                
+                if (careClass5[productCode]) {
+                    // 方法 1: 從 Care 工作表的 class5 判斷
+                    const class5 = careClass5[productCode];
+                    if (class5 === 'CPU') careCategory = 'CPU';
+                    else if (class5 === 'iPad') careCategory = 'iPad';
+                    else if (class5 === 'iPhone') careCategory = 'iPhone';
+                    else if (class5 === 'AW') careCategory = 'Apple Watch';
+                    else if (class5 === 'Audio') careCategory = 'AirPods';
+                } 
+                else if (classDesc && (classDesc.includes('7063 Apple AC+ system') || 
+                                       (productName && (productName.includes('AC+') || productName.includes('ACPP') || productName.includes('iCPP'))))) {
+                    // 方法 2: 如果產品代碼不在 Care 工作表，使用產品名稱判斷
+                    const nameUpper = productName ? productName.toUpperCase() : '';
+                    
+                    if (nameUpper.includes('MACBOOK') || nameUpper.includes('MBP') || nameUpper.includes('MBA') || nameUpper.includes('MAC')) {
+                        careCategory = 'CPU';
+                    } else if (nameUpper.includes('IPAD')) {
+                        careCategory = 'iPad';
+                    } else if (nameUpper.includes('IPHONE')) {
+                        careCategory = 'iPhone';
+                    } else if (nameUpper.includes('WATCH') || nameUpper.includes(' AW ')) {
+                        careCategory = 'Apple Watch';
+                    } else if (nameUpper.includes('AIRPODS')) {
+                        careCategory = 'AirPods';
+                    }
+                }
+                
+                if (careCategory) {
+                    storeData[storeId][careCategory].care += qty;
+                    storeData[storeId][careCategory].careAmt += amt;
+                    continue;
+                }
+                
+                // 不是 Care 產品，根據大分類判斷主機類別
+                const bigCategory = productCategory[productCode];
+                if (bigCategory) {
+                    let category = null;
+                    
+                    if (bigCategory === 'CPU') category = 'CPU';
+                    else if (bigCategory === 'iPad') category = 'iPad';
+                    else if (bigCategory === 'iPhone') category = 'iPhone';
+                    else if (bigCategory === 'Apple Watch') category = 'Apple Watch';
+                    else if (bigCategory === 'AirPods') category = 'AirPods';
+                    
+                    if (category) {
+                        storeData[storeId][category].st += qty;
+                    }
+                }
+            }
+            
+            return storeData;
+        }
+
+        // 生成 Care 表格
+        function generateCareTable(storeId, careData) {
+            if (!careData || !careData.lastYear || !careData.thisYear) {
+                return '<div style="color: #9ca3af; padding: 20px; text-align: center;">Care 數據載入失敗</div>';
+            }
+            
+            const categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods'];
+            
+            const lastYearData = careData.lastYear.data[storeId] || {};
+            const thisYearData = careData.thisYear.data[storeId] || {};
+            
+            let totalLastYearST = 0, totalLastYearCare = 0, totalLastYearCareAmt = 0;
+            let totalThisYearST = 0, totalThisYearCare = 0, totalThisYearCareAmt = 0;
+            
+            const rows = categories.map(cat => {
+                const lastYear = lastYearData[cat] || { st: 0, care: 0, careAmt: 0 };
+                const thisYear = thisYearData[cat] || { st: 0, care: 0, careAmt: 0 };
+                
+                const lastYearRate = lastYear.st > 0 ? (lastYear.care / lastYear.st * 100) : 0;
+                const thisYearRate = thisYear.st > 0 ? (thisYear.care / thisYear.st * 100) : 0;
+                
+                totalLastYearST += lastYear.st;
+                totalLastYearCare += lastYear.care;
+                totalLastYearCareAmt += lastYear.careAmt;
+                totalThisYearST += thisYear.st;
+                totalThisYearCare += thisYear.care;
+                totalThisYearCareAmt += thisYear.careAmt;
+                
+                // 計算 YoY
+                const stYoY = lastYear.st > 0 ? ((thisYear.st - lastYear.st) / lastYear.st * 100) : 0;
+                const careYoY = lastYear.care > 0 ? ((thisYear.care - lastYear.care) / lastYear.care * 100) : (thisYear.care > 0 ? 0 : 0);
+                const careAmtYoY = lastYear.careAmt > 0 ? ((thisYear.careAmt - lastYear.careAmt) / lastYear.careAmt * 100) : (thisYear.careAmt > 0 ? 0 : 0);
+                const rateYoY = thisYearRate - lastYearRate;
+                
+                const stYoYClass = stYoY > 0 ? 'positive' : stYoY < 0 ? 'negative' : 'neutral';
+                const careYoYClass = careYoY > 0 ? 'positive' : careYoY < 0 ? 'negative' : 'neutral';
+                const careAmtYoYClass = careAmtYoY > 0 ? 'positive' : careAmtYoY < 0 ? 'negative' : 'neutral';
+                const rateYoYClass = rateYoY > 0 ? 'positive' : rateYoY < 0 ? 'negative' : 'neutral';
+                
+                const stYoYSign = stYoY > 0 ? '+' : '';
+                const careYoYSign = careYoY > 0 ? '+' : '';
+                const careAmtYoYSign = careAmtYoY > 0 ? '+' : '';
+                const rateYoYSign = rateYoY > 0 ? '+' : '';
+                
+                return `
+                    <tr>
+                        <td>${cat === 'Apple Watch' ? 'AW' : cat}</td>
+                        <td>${lastYear.st}</td>
+                        <td>${lastYear.care}</td>
+                        <td>${Math.round(lastYear.careAmt).toLocaleString()}</td>
+                        <td><span style="color: #fb923c;">${lastYearRate.toFixed(2)}%</span></td>
+                        <td>${thisYear.st}</td>
+                        <td>${thisYear.care}</td>
+                        <td>${Math.round(thisYear.careAmt).toLocaleString()}</td>
+                        <td><span style="color: #4ade80;">${thisYearRate.toFixed(2)}%</span></td>
+                        <td><span class="${stYoYClass}">${stYoYSign}${stYoY.toFixed(1)}%</span></td>
+                        <td><span class="${careYoYClass}">${careYoYSign}${careYoY.toFixed(1)}%</span></td>
+                        <td><span class="${careAmtYoYClass}">${careAmtYoYSign}${careAmtYoY.toFixed(1)}%</span></td>
+                        <td><span class="${rateYoYClass}">${rateYoYSign}${rateYoY.toFixed(2)}%</span></td>
+                    </tr>
+                `;
+            }).join('');
+            
+            const totalLastYearRate = totalLastYearST > 0 ? (totalLastYearCare / totalLastYearST * 100) : 0;
+            const totalThisYearRate = totalThisYearST > 0 ? (totalThisYearCare / totalThisYearST * 100) : 0;
+            
+            const totalSTYoY = totalLastYearST > 0 ? ((totalThisYearST - totalLastYearST) / totalLastYearST * 100) : 0;
+            const totalCareYoY = totalLastYearCare > 0 ? ((totalThisYearCare - totalLastYearCare) / totalLastYearCare * 100) : 0;
+            const totalCareAmtYoY = totalLastYearCareAmt > 0 ? ((totalThisYearCareAmt - totalLastYearCareAmt) / totalLastYearCareAmt * 100) : 0;
+            const totalRateYoY = totalThisYearRate - totalLastYearRate;
+            
+            const totalSTYoYClass = totalSTYoY > 0 ? 'positive' : totalSTYoY < 0 ? 'negative' : 'neutral';
+            const totalCareYoYClass = totalCareYoY > 0 ? 'positive' : totalCareYoY < 0 ? 'negative' : 'neutral';
+            const totalCareAmtYoYClass = totalCareAmtYoY > 0 ? 'positive' : totalCareAmtYoY < 0 ? 'negative' : 'neutral';
+            const totalRateYoYClass = totalRateYoY > 0 ? 'positive' : totalRateYoY < 0 ? 'negative' : 'neutral';
+            
+            const totalSTYoYSign = totalSTYoY > 0 ? '+' : '';
+            const totalCareYoYSign = totalCareYoY > 0 ? '+' : '';
+            const totalCareAmtYoYSign = totalCareAmtYoY > 0 ? '+' : '';
+            const totalRateYoYSign = totalRateYoY > 0 ? '+' : '';
+            
+            return `
+                <div style="margin-bottom: 10px; color: #9ca3af; font-size: 14px;">
+                    ※ 搭售率 = (ACPP+ + iCPP) / 主機銷售數量 × 100%
+                </div>
+                <table class="care-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">產品類別</th>
+                            <th colspan="4">去年 (${careData.lastYear.date})</th>
+                            <th colspan="4">今年 (${careData.thisYear.date})</th>
+                            <th colspan="4">YoY</th>
+                        </tr>
+                        <tr>
+                            <th>ST</th>
+                            <th>AC+ 套數</th>
+                            <th>AC+ 金額</th>
+                            <th>搭售率</th>
+                            <th>ST</th>
+                            <th>AC+ 套數</th>
+                            <th>AC+ 金額</th>
+                            <th>搭售率</th>
+                            <th>ST</th>
+                            <th>AC+ 套數</th>
+                            <th>AC+ 金額</th>
+                            <th>搭售率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                        <tr style="background: rgba(59, 130, 246, 0.1); font-weight: 600;">
+                            <td>總計</td>
+                            <td>${totalLastYearST}</td>
+                            <td>${totalLastYearCare}</td>
+                            <td>${Math.round(totalLastYearCareAmt).toLocaleString()}</td>
+                            <td><span style="color: #fb923c;">${totalLastYearRate.toFixed(2)}%</span></td>
+                            <td>${totalThisYearST}</td>
+                            <td>${totalThisYearCare}</td>
+                            <td>${Math.round(totalThisYearCareAmt).toLocaleString()}</td>
+                            <td><span style="color: #4ade80;">${totalThisYearRate.toFixed(2)}%</span></td>
+                            <td><span class="${totalSTYoYClass}">${totalSTYoYSign}${totalSTYoY.toFixed(1)}%</span></td>
+                            <td><span class="${totalCareYoYClass}">${totalCareYoYSign}${totalCareYoY.toFixed(1)}%</span></td>
+                            <td><span class="${totalCareAmtYoYClass}">${totalCareAmtYoYSign}${totalCareAmtYoY.toFixed(1)}%</span></td>
+                            <td><span class="${totalRateYoYClass}">${totalRateYoYSign}${totalRateYoY.toFixed(2)}%</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 計算當前應該回顧的週次
+        function getCurrentWeekInfo() {
+            const today = new Date();
+            
+            // FY26Q2 的週次定義
+            const weeks = [
+                { week: 'W1', start: '2025-12-28', end: '2026-01-03' },
+                { week: 'W2', start: '2026-01-04', end: '2026-01-10' },
+                { week: 'W3', start: '2026-01-11', end: '2026-01-17' },
+                { week: 'W4', start: '2026-01-18', end: '2026-01-24' },
+                { week: 'W5', start: '2026-01-25', end: '2026-01-31' },
+                { week: 'W6', start: '2026-02-01', end: '2026-02-07' },
+                { week: 'W7', start: '2026-02-08', end: '2026-02-14' },
+                { week: 'W8', start: '2026-02-15', end: '2026-02-21' },
+                { week: 'W9', start: '2026-02-22', end: '2026-02-28' },
+                { week: 'W10', start: '2026-03-01', end: '2026-03-07' },
+                { week: 'W11', start: '2026-03-08', end: '2026-03-14' },
+                { week: 'W12', start: '2026-03-15', end: '2026-03-21' },
+            ];
+
+            // 找出當前在哪一週
+            const todayStr = today.toISOString().split('T')[0];
+            let currentWeek = null;
+            
+            for (let i = 0; i < weeks.length; i++) {
+                if (todayStr >= weeks[i].start && todayStr <= weeks[i].end) {
+                    currentWeek = weeks[i];
+                    break;
+                }
+            }
+
+            // 如果找不到，默認為最後一週
+            if (!currentWeek) {
+                currentWeek = weeks[weeks.length - 1];
+            }
+
+            // 回顧上一週
+            const currentWeekNum = parseInt(currentWeek.week.substring(1));
+            const reviewWeekNum = currentWeekNum - 1;
+            const reviewWeek = weeks.find(w => w.week === `W${reviewWeekNum}`);
+
+            return {
+                currentWeek: currentWeek.week,
+                reviewWeek: reviewWeek ? reviewWeek.week : 'W1',
+                reviewDateRange: reviewWeek ? `${reviewWeek.start.substring(5)} ~ ${reviewWeek.end.substring(5)}` : '',
+                start: reviewWeek ? reviewWeek.start : '',
+                end: reviewWeek ? reviewWeek.end : '',
+                quarter: 'FY26Q2'
+            };
+        }
+
+        // 載入季度數據
+        async function loadQuarterlyData() {
+            const weekInfo = getCurrentWeekInfo();
+            
+            // 更新頁面標題
+            document.getElementById('weekInfo').innerHTML = `
+                本週：${weekInfo.quarter}${weekInfo.currentWeek}<br>
+                <span style="color: #fb923c;">回顧週：${weekInfo.quarter}${weekInfo.reviewWeek} (${weekInfo.reviewDateRange})</span>
+            `;
+
+            try {
+                // 載入今年、去年、目標檔案和 Care 檔案
+                const [responseThisYear, responseLastYear, responseTargets, careData] = await Promise.all([
+                    fetch(`data/quarterly/${weekInfo.quarter}.xlsx`),
+                    fetch(`data/quarterly/FY25Q2.xlsx`),
+                    fetch(`data/quarterly/${weekInfo.quarter}_targets.xlsx`),
+                    loadCareFiles(weekInfo)
+                ]);
+                
+                const [dataThisYear, dataLastYear, dataTargets] = await Promise.all([
+                    responseThisYear.arrayBuffer(),
+                    responseLastYear.arrayBuffer(),
+                    responseTargets.arrayBuffer()
+                ]);
+
+                const workbookThisYear = XLSX.read(new Uint8Array(dataThisYear), { type: 'array' });
+                const workbookLastYear = XLSX.read(new Uint8Array(dataLastYear), { type: 'array' });
+                const workbookTargets = XLSX.read(new Uint8Array(dataTargets), { type: 'array' });
+
+                // 解析數據 - 今年用 '26'，去年用 '25'
+                const quarterDataThisYear = parseQuarterlyData(workbookThisYear, weekInfo.reviewWeek, '26');
+                const quarterDataLastYear = parseQuarterlyData(workbookLastYear, weekInfo.reviewWeek, '25');
+                const targetsData = parseTargetsData(workbookTargets);
+                
+                // 合併去年數據、目標數據和 Care 數據到今年數據中
+                Object.keys(quarterDataThisYear).forEach(storeId => {
+                    quarterDataThisYear[storeId].lastYearProducts = quarterDataLastYear[storeId].products;
+                    quarterDataThisYear[storeId].lastYearData = quarterDataLastYear[storeId];  // 完整的去年數據（包含 Traffic）
+                    quarterDataThisYear[storeId].targets = targetsData[storeId] || {};  // 本季目標
+                    quarterDataThisYear[storeId].careData = careData;  // Care 數據
+                });
+                
+                // 顯示報告
+                displayWeeklyReport(quarterDataThisYear, weekInfo);
+            } catch (error) {
+                console.error('載入季度數據失敗:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="loading" style="color: #f87171;">
+                        載入失敗：${error.message}<br>
+                        請確認檔案存在：<br>
+                        - data/quarterly/${weekInfo.quarter}.xlsx<br>
+                        - data/quarterly/FY25Q2.xlsx<br>
+                        - data/quarterly/${weekInfo.quarter}_targets.xlsx
+                    </div>
+                `;
+            }
+        }
+
+        // 解析季度數據
+        function parseQuarterlyData(workbook, reviewWeek, fiscalYear = '26') {
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            
+            // 找出回顧週的欄位位置
+            const weekHeaders = rows[0];
+            const fullWeekName = `${fiscalYear}Q2${reviewWeek}`;  // 例如: 26Q2W10 或 25Q2W10
+            const weekIndex = weekHeaders.findIndex(h => h === fullWeekName);
+            
+            if (weekIndex === -1) {
+                throw new Error(`找不到週次 ${reviewWeek} (完整名稱: ${fullWeekName})`);
+            }
+
+            // 動態計算總週數：計算有多少個週次欄位（格式如 26Q2W1, 26Q2W2, ...）
+            const weekPattern = new RegExp(`^${fiscalYear}Q2W\\d+$`);
+            const totalWeeks = weekHeaders.filter(h => h && weekPattern.test(h)).length;
+            
+            console.log(`偵測到 ${totalWeeks} 週的數據`);
+
+            const result = {};
+
+            // 解析每個門市的數據
+            Object.keys(CENTRAL_STORES).forEach(storeId => {
+                const storeNum = parseInt(storeId);
+                result[storeId] = parseStoreData(rows, storeNum, weekIndex, totalWeeks);
+            });
+
+            return result;
+        }
+
+        // 解析目標數據
+        function parseTargetsData(workbook) {
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            const targetsData = {};
+            let currentStore = null;
+
+            // 從第 5 行開始解析（跳過標題行）
+            for (let i = 4; i < rows.length; i++) {
+                const row = rows[i];
+
+                // 門市起始行
+                if (row[0] && typeof row[0] === 'number') {
+                    currentStore = row[0].toString();
+                    if (!targetsData[currentStore]) {
+                        targetsData[currentStore] = {};
+                    }
+
+                    const product = row[1];
+                    const quarterlyTarget = row[2];
+
+                    if (product && quarterlyTarget) {
+                        targetsData[currentStore][product] = {
+                            quarterly: quarterlyTarget,
+                            weekly: row[3] || null  // 上週目標（目前為空）
+                        };
+                    }
+                }
+                // 產品行（store 欄位為空）
+                else if (!row[0] && row[1] && currentStore) {
+                    const product = row[1];
+                    const quarterlyTarget = row[2];
+
+                    if (product && quarterlyTarget) {
+                        targetsData[currentStore][product] = {
+                            quarterly: quarterlyTarget,
+                            weekly: row[3] || null
+                        };
+                    }
+                }
+                // 遇到「合計」行，重置當前門市
+                else if (row[0] && typeof row[0] === 'string' && row[0].includes('合計')) {
+                    currentStore = null;
+                }
+            }
+
+            return targetsData;
+        }
+
+        // 解析單一門市數據
+        function parseStoreData(rows, storeNum, weekColIndex, totalWeeks) {
+            const storeData = {
+                products: {},
+                traffic: null,
+                weeklyTraffic: [],
+                weeklyConversion: []
+            };
+
+            let isInStoreBlock = false;
+            let productCount = 0;
+            
+            // 遍歷所有行
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                
+                // 找到該門市的起始行
+                if (row[0] === storeNum) {
+                    isInStoreBlock = true;
+                    
+                    // 檢查是否為 Traffic 行
+                    if (row[1] === 'Traffic') {
+                        // 收集所有週的 Traffic 數據
+                        const weeklyTraffic = [];
+                        for (let week = 0; week < totalWeeks; week++) {
+                            const weekStartCol = week * 8;
+                            const trafficCol = weekStartCol + 2;
+                            const traffic = row[trafficCol] || 0;
+                            weeklyTraffic.push(traffic);
+                        }
+                        storeData.weeklyTraffic = weeklyTraffic;
+                        storeData.traffic = {
+                            weekTraffic: row[weekColIndex + 2] || 0,
+                            totalTraffic: weeklyTraffic.reduce((sum, val) => sum + val, 0)
+                        };
+                    }
+                    continue;
+                }
+                
+                // 如果遇到下一個門市，停止
+                if (isInStoreBlock && row[0] !== null && typeof row[0] === 'number' && row[0] !== storeNum) {
+                    break;
+                }
+                
+                // 在該門市區塊內，解析產品數據
+                if (isInStoreBlock && !row[0] && row[1]) {
+                    const productClass = row[1];
+                    
+                    // 當前回顧週的數量
+                    const weekQty = row[weekColIndex + 2] || 0;
+                    const weekAmount = row[weekColIndex + 3] || 0;
+                    
+                    // 五大主機 + AirPods（用於計算轉換率）
+                    const allProducts = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods'];
+                    
+                    // 計算所有週的累積（每週間隔 8 欄）
+                    let totalQty = 0;
+                    let totalAmount = 0;
+                    const weeklyQty = [];
+                    
+                    for (let week = 0; week < totalWeeks; week++) {
+                        const weekStartCol = week * 8;
+                        const qtyCol = weekStartCol + 2;
+                        const amtCol = weekStartCol + 3;
+                        
+                        const qty = (qtyCol < row.length && typeof row[qtyCol] === 'number') ? row[qtyCol] : 0;
+                        const amt = (amtCol < row.length && typeof row[amtCol] === 'number') ? row[amtCol] : 0;
+                        
+                        totalQty += qty;
+                        totalAmount += amt;
+                        weeklyQty.push(qty);
+                    }
+
+                    if (allProducts.includes(productClass)) {
+                        storeData.products[productClass] = {
+                            weekQty: weekQty,
+                            weekAmount: weekAmount,
+                            totalQty: totalQty,
+                            totalAmount: totalAmount,
+                            weeklyQty: weeklyQty
+                        };
+                        productCount++;
+                    }
+                }
+            }
+
+            return storeData;
+        }
+
+        // 全域變數儲存當前數據
+        let currentQuarterData = {};
+        let currentWeekInfo = {};
+
+        // 顯示週報
+        function displayWeeklyReport(quarterData, weekInfo) {
+            // 儲存到全域變數供 CSV 匯出使用
+            currentQuarterData = quarterData;
+            currentWeekInfo = weekInfo;
+            
+            // 先生成門市選擇按鈕
+            const buttonsContainer = document.getElementById('storeButtons');
+            buttonsContainer.innerHTML = '';
+            
+            Object.entries(CENTRAL_STORES).forEach(([storeId, storeName]) => {
+                const btn = document.createElement('button');
+                btn.className = 'store-btn';
+                btn.textContent = `${storeId} ${storeName}`;
+                btn.dataset.storeId = storeId;
+                
+                btn.addEventListener('click', () => {
+                    // 移除所有按鈕的 active 狀態
+                    document.querySelectorAll('.store-btn').forEach(b => b.classList.remove('active'));
+                    // 添加當前按鈕的 active 狀態
+                    btn.classList.add('active');
+                    // 顯示該門市的數據
+                    displayStoreData(storeId, quarterData[storeId], weekInfo);
+                });
+                
+                buttonsContainer.appendChild(btn);
+            });
+            
+            // 清空內容區域，等待用戶選擇
+            document.getElementById('content').innerHTML = `
+                <div class="loading" style="text-align: center; padding: 60px; color: #9ca3af;">
+                    👆 請選擇門市查看週報數據
+                </div>
+            `;
+        }
+
+        // CSV 匯出功能
+        function exportToCSV(storeId, weekLabel) {
+            const data = currentQuarterData[storeId];
+            if (!data) {
+                alert('數據載入中，請稍後再試');
+                return;
+            }
+
+            const fiveProducts = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods'];
+            const csvRows = [];
+
+            // UTF-8 BOM
+            csvRows.push('\uFEFF');
+
+            // 標題
+            csvRows.push(`門市 ${storeId} - ${weekLabel} 週報數據`);
+            csvRows.push('');
+
+            // === 週銷售回顧 ===
+            csvRows.push(`=== ${weekLabel} 週銷售回顧 ===`);
+            csvRows.push('產品,上週目標,實際達成,差異,上週銷售狀況,改善方案');
+            
+            const weeklyProducts = ['CPU', 'iPad'];
+            weeklyProducts.forEach(product => {
+                const productData = data.products[product] || { weekQty: 0 };
+                const actualAchievement = Math.round(productData.weekQty);
+                
+                csvRows.push(`${product},-,${actualAchievement},-,-,-`);
+            });
+
+            csvRows.push('');
+
+            // === 季度總覽 ===
+            csvRows.push('=== 季度總覽 ===');
+            csvRows.push('產品,本季目標,本季累積,達成率,去年同期累積,YoY');
+            
+            const quarterlyProducts = ['CPU', 'iPad', 'iPhone', 'Apple Watch'];
+            quarterlyProducts.forEach(product => {
+                const productKey = product === 'AW' ? 'Apple Watch' : product;
+                const productData = data.products[productKey] || { totalQty: 0 };
+                const lastYearData = data.lastYearProducts ? (data.lastYearProducts[productKey] || { totalQty: 0 }) : { totalQty: 0 };
+                const targetData = data.targets ? data.targets[productKey] : null;
+                
+                const thisYearTotal = Math.round(productData.totalQty);
+                const lastYearTotal = Math.round(lastYearData.totalQty);
+                const quarterlyTarget = targetData ? targetData.quarterly : '';
+                const achievementRate = quarterlyTarget && quarterlyTarget > 0 ? (thisYearTotal / quarterlyTarget * 100).toFixed(1) + '%' : '';
+                const yoy = lastYearTotal > 0 ? ((thisYearTotal - lastYearTotal) / lastYearTotal * 100).toFixed(1) + '%' : '0.0%';
+                
+                csvRows.push(`${product},${quarterlyTarget},${thisYearTotal},${achievementRate},${lastYearTotal},${yoy}`);
+            });
+
+            csvRows.push('');
+
+            // === Traffic 轉換率 ===
+            csvRows.push('=== 成交轉換率 ===');
+            csvRows.push('週次,進店人流,成交台數,成交轉換率,去年同週人流,YoY');
+
+            const totalWeeks = data.weeklyTraffic ? data.weeklyTraffic.length : 0;
+            
+            for (let week = 0; week < totalWeeks; week++) {
+                let salesCount = 0;
+                fiveProducts.forEach(p => {
+                    const key = p === 'AW' ? 'Apple Watch' : p;
+                    if (data.products[key] && data.products[key].weeklyQty) {
+                        salesCount += data.products[key].weeklyQty[week] || 0;
+                    }
+                });
+
+                const traffic = data.weeklyTraffic[week] || 0;
+                const conversion = traffic > 0 ? (salesCount / traffic * 100).toFixed(1) + '%' : '0.0%';
+                const lastYearTraffic = data.lastYearData && data.lastYearData.weeklyTraffic ? (data.lastYearData.weeklyTraffic[week] || 0) : 0;
+                const trafficYoY = lastYearTraffic > 0 ? ((traffic - lastYearTraffic) / lastYearTraffic * 100).toFixed(1) + '%' : '0.0%';
+
+                csvRows.push(`W${week + 1},${traffic},${salesCount},${conversion},${lastYearTraffic},${trafficYoY}`);
+            }
+
+            // 總計
+            const totalTraffic = data.weeklyTraffic.reduce((sum, val) => sum + val, 0);
+            let totalSales = 0;
+            for (let week = 0; week < totalWeeks; week++) {
+                fiveProducts.forEach(p => {
+                    const key = p === 'AW' ? 'Apple Watch' : p;
+                    if (data.products[key] && data.products[key].weeklyQty) {
+                        totalSales += data.products[key].weeklyQty[week] || 0;
+                    }
+                });
+            }
+            const totalConversion = totalTraffic > 0 ? (totalSales / totalTraffic * 100).toFixed(1) + '%' : '0.0%';
+            const lastYearTotalTraffic = data.lastYearData && data.lastYearData.traffic ? data.lastYearData.traffic.totalTraffic : 0;
+            const totalTrafficYoY = lastYearTotalTraffic > 0 ? ((totalTraffic - lastYearTotalTraffic) / lastYearTotalTraffic * 100).toFixed(1) + '%' : '0.0%';
+
+            csvRows.push(`總計,${totalTraffic},${totalSales},${totalConversion},${lastYearTotalTraffic},${totalTrafficYoY}`);
+
+            csvRows.push('');
+
+            // === Care 產品搭售率分析 ===
+            if (data.careData && data.careData.lastYear && data.careData.thisYear) {
+                csvRows.push('=== Care 產品搭售率分析 ===');
+                csvRows.push(`產品類別,去年ST,去年AC+套數,去年AC+金額,去年搭售率,今年ST,今年AC+套數,今年AC+金額,今年搭售率,ST YoY,AC+套數 YoY,AC+金額 YoY,搭售率 YoY`);
+                
+                const careCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods'];
+                const lastYearCare = data.careData.lastYear.data[storeId] || {};
+                const thisYearCare = data.careData.thisYear.data[storeId] || {};
+                
+                let totalLastST = 0, totalLastCare = 0, totalLastCareAmt = 0;
+                let totalThisST = 0, totalThisCare = 0, totalThisCareAmt = 0;
+                
+                careCategories.forEach(cat => {
+                    const lastYear = lastYearCare[cat] || { st: 0, care: 0, careAmt: 0 };
+                    const thisYear = thisYearCare[cat] || { st: 0, care: 0, careAmt: 0 };
+                    
+                    const lastYearRate = lastYear.st > 0 ? (lastYear.care / lastYear.st * 100).toFixed(2) + '%' : '0.00%';
+                    const thisYearRate = thisYear.st > 0 ? (thisYear.care / thisYear.st * 100).toFixed(2) + '%' : '0.00%';
+                    
+                    const stYoY = lastYear.st > 0 ? ((thisYear.st - lastYear.st) / lastYear.st * 100).toFixed(1) + '%' : '0.0%';
+                    const careYoY = lastYear.care > 0 ? ((thisYear.care - lastYear.care) / lastYear.care * 100).toFixed(1) + '%' : '0.0%';
+                    const careAmtYoY = lastYear.careAmt > 0 ? ((thisYear.careAmt - lastYear.careAmt) / lastYear.careAmt * 100).toFixed(1) + '%' : '0.0%';
+                    const rateYoY = ((thisYear.st > 0 ? thisYear.care / thisYear.st * 100 : 0) - (lastYear.st > 0 ? lastYear.care / lastYear.st * 100 : 0)).toFixed(2) + '%';
+                    
+                    totalLastST += lastYear.st;
+                    totalLastCare += lastYear.care;
+                    totalLastCareAmt += lastYear.careAmt;
+                    totalThisST += thisYear.st;
+                    totalThisCare += thisYear.care;
+                    totalThisCareAmt += thisYear.careAmt;
+                    
+                    csvRows.push(`${cat},${lastYear.st},${lastYear.care},${Math.round(lastYear.careAmt)},${lastYearRate},${thisYear.st},${thisYear.care},${Math.round(thisYear.careAmt)},${thisYearRate},${stYoY},${careYoY},${careAmtYoY},${rateYoY}`);
+                });
+                
+                const totalLastRate = totalLastST > 0 ? (totalLastCare / totalLastST * 100).toFixed(2) + '%' : '0.00%';
+                const totalThisRate = totalThisST > 0 ? (totalThisCare / totalThisST * 100).toFixed(2) + '%' : '0.00%';
+                
+                const totalSTYoY = totalLastST > 0 ? ((totalThisST - totalLastST) / totalLastST * 100).toFixed(1) + '%' : '0.0%';
+                const totalCareYoY = totalLastCare > 0 ? ((totalThisCare - totalLastCare) / totalLastCare * 100).toFixed(1) + '%' : '0.0%';
+                const totalCareAmtYoY = totalLastCareAmt > 0 ? ((totalThisCareAmt - totalLastCareAmt) / totalLastCareAmt * 100).toFixed(1) + '%' : '0.0%';
+                const totalRateYoY = ((totalThisST > 0 ? totalThisCare / totalThisST * 100 : 0) - (totalLastST > 0 ? totalLastCare / totalLastST * 100 : 0)).toFixed(2) + '%';
+                
+                csvRows.push(`總計,${totalLastST},${totalLastCare},${Math.round(totalLastCareAmt)},${totalLastRate},${totalThisST},${totalThisCare},${Math.round(totalThisCareAmt)},${totalThisRate},${totalSTYoY},${totalCareYoY},${totalCareAmtYoY},${totalRateYoY}`);
+            }
+
+            // 生成 CSV 內容
+            const csvContent = csvRows.join('\n');
+
+            // 建立下載
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${storeId}_${weekLabel}_數據.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 顯示單一門市數據
+        function displayStoreData(storeId, data, weekInfo) {
+            const storeName = CENTRAL_STORES[storeId];
+            const content = document.getElementById('content');
+            
+            content.innerHTML = generateStoreReport(storeId, storeName, data, weekInfo);
+            
+            // 繪製圖表
+            // 需要等待 DOM 更新後再繪製
+            setTimeout(() => {
+                drawCharts(storeId, data);
+                drawTrafficChart(storeId, data);
+            }, 100);
+        }
+
+        // 生成單一門市報告
+        function generateStoreReport(storeId, storeName, data, weekInfo) {
+            const mainProducts = ['CPU', 'iPad', 'iPhone', 'Apple Watch'];
+            
+            // 從 data 中取出去年數據（已經在 loadQuarterlyData 中合併）
+            const lastYearData = data.lastYearData || null;
+            
+            return `
+                <div class="store-section">
+                    <div class="store-title">
+                        <span>門市業績 > 四大主機銷售 > ${storeName}</span>
+                        <button class="csv-export-btn" onclick="exportToCSV('${storeId}', '${weekInfo.quarter}${weekInfo.reviewWeek}')">
+                            📊 匯出 CSV
+                        </button>
+                        <span style="margin-left: auto; font-size: 18px; color: #9ca3af;">中區</span>
+                    </div>
+                    <div class="store-subtitle">門市 ${storeId}</div>
+
+                    <div class="section-header">${weekInfo.quarter}${weekInfo.reviewWeek} 週銷售回顧</div>
+                    ${generateWeeklyReviewTable(data)}
+
+                    <div class="quarter-overview">
+                        <div class="quarter-overview-header">${weekInfo.quarter.substring(0, 6)} 季度總覽</div>
+                        <div>
+                            ${generateQuarterOverviewTable(data)}
+                        </div>
+                        <div>
+                            <div class="chart-container">
+                                <div class="chart-wrapper">
+                                    <canvas id="chart-${storeId}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="traffic-overview">
+                        <div class="traffic-overview-header">門市 ${storeId} - 成交轉換率</div>
+                        <div>
+                            ${generateTrafficTable(data, lastYearData)}
+                        </div>
+                        <div>
+                            <div class="chart-container">
+                                <div class="chart-wrapper">
+                                    <canvas id="traffic-chart-${storeId}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="care-section">
+                        <div class="care-section-header">Care 產品搭售率分析</div>
+                        ${data.careData ? generateCareTable(storeId, data.careData) : '<div style="color: #9ca3af; padding: 20px; text-align: center;">Care 數據載入中...</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 生成 Traffic 轉換率表格
+        function generateTrafficTable(data, lastYearData) {
+            const fiveProducts = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods'];
+            
+            // 動態獲取週數（從 weeklyTraffic 的長度）
+            const totalWeeks = data.weeklyTraffic ? data.weeklyTraffic.length : 0;
+            
+            // 計算每週的成交台數和轉換率
+            const weeklyData = [];
+            for (let week = 0; week < totalWeeks; week++) {
+                let salesCount = 0;
+                fiveProducts.forEach(product => {
+                    if (data.products[product] && data.products[product].weeklyQty) {
+                        salesCount += data.products[product].weeklyQty[week] || 0;
+                    }
+                });
+                
+                const traffic = data.weeklyTraffic[week] || 0;
+                const conversionRate = traffic > 0 ? (salesCount / traffic * 100) : 0;
+                
+                // 去年同週人流
+                const lastYearTraffic = lastYearData && lastYearData.weeklyTraffic ? (lastYearData.weeklyTraffic[week] || 0) : 0;
+                const trafficYoY = lastYearTraffic > 0 ? ((traffic - lastYearTraffic) / lastYearTraffic * 100) : 0;
+                
+                weeklyData.push({
+                    week: week + 1,
+                    traffic: traffic,
+                    sales: salesCount,
+                    conversion: conversionRate,
+                    lastYearTraffic: lastYearTraffic,
+                    yoy: trafficYoY
+                });
+            }
+            
+            // 計算去年同期的人流
+            const lastYearTotalTraffic = lastYearData && lastYearData.traffic ? lastYearData.traffic.totalTraffic : 0;
+            const thisYearTotalTraffic = data.traffic ? data.traffic.totalTraffic : 0;
+            const totalTrafficYoY = lastYearTotalTraffic > 0 ? ((thisYearTotalTraffic - lastYearTotalTraffic) / lastYearTotalTraffic * 100) : 0;
+            
+            // 計算總計
+            const totalTraffic = weeklyData.reduce((sum, w) => sum + w.traffic, 0);
+            const totalSales = weeklyData.reduce((sum, w) => sum + w.sales, 0);
+            const totalConversion = totalTraffic > 0 ? (totalSales / totalTraffic * 100) : 0;
+            
+            return `
+                <table class="traffic-table">
+                    <thead>
+                        <tr>
+                            <th>週次</th>
+                            <th>進店人流</th>
+                            <th>成交台數</th>
+                            <th>成交轉換率</th>
+                            <th>去年同週人流</th>
+                            <th>YoY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${weeklyData.map(w => {
+                            const yoyClass = w.yoy > 0 ? 'positive' : w.yoy < 0 ? 'negative' : 'neutral';
+                            const yoySign = w.yoy > 0 ? '+' : '';
+                            return `
+                                <tr>
+                                    <td><strong>W${w.week}</strong></td>
+                                    <td>${w.traffic.toLocaleString()}</td>
+                                    <td>${w.sales}</td>
+                                    <td><strong style="color: #60a5fa;">${w.conversion.toFixed(1)}%</strong></td>
+                                    <td>${w.lastYearTraffic.toLocaleString()}</td>
+                                    <td><span class="${yoyClass}">${yoySign}${w.yoy.toFixed(1)}%</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                        <tr style="background: rgba(59, 130, 246, 0.1); font-weight: 600;">
+                            <td>總計</td>
+                            <td>${totalTraffic.toLocaleString()}</td>
+                            <td>${totalSales}</td>
+                            <td><strong style="color: #4ade80;">${totalConversion.toFixed(1)}%</strong></td>
+                            <td>${lastYearTotalTraffic.toLocaleString()}</td>
+                            <td><span class="${totalTrafficYoY >= 0 ? 'positive' : 'negative'}">${totalTrafficYoY > 0 ? '+' : ''}${totalTrafficYoY.toFixed(1)}%</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 生成週銷售回顧表格
+        function generateWeeklyReviewTable(data) {
+            const mainProducts = ['CPU', 'iPad'];
+            
+            return `
+                <table class="weekly-review-table">
+                    <thead>
+                        <tr>
+                            <th>產品</th>
+                            <th>上週目標</th>
+                            <th>實際達成</th>
+                            <th>差異</th>
+                            <th>上週銷售狀況</th>
+                            <th>改善方案<br>(達成就不用填寫)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${mainProducts.map(product => {
+                            const productData = data.products[product] || { weekQty: 0 };
+                            return `
+                                <tr>
+                                    <td>${product}</td>
+                                    <td>-</td>
+                                    <td><strong>${Math.round(productData.weekQty)}</strong></td>
+                                    <td>-</td>
+                                    <td style="text-align: left;">-</td>
+                                    <td style="text-align: left;">-</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 生成季度總覽表格
+        function generateQuarterOverviewTable(data) {
+            const mainProducts = ['CPU', 'iPad', 'iPhone', 'AW'];
+            
+            return `
+                <table class="overview-table">
+                    <thead>
+                        <tr>
+                            <th>產品</th>
+                            <th>本季目標</th>
+                            <th>本季累積</th>
+                            <th>達成率</th>
+                            <th>去年同期累積</th>
+                            <th>YoY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${mainProducts.map(product => {
+                            const productKey = product === 'AW' ? 'Apple Watch' : product;
+                            const productData = data.products[productKey] || { totalQty: 0 };
+                            const lastYearData = data.lastYearProducts ? (data.lastYearProducts[productKey] || { totalQty: 0 }) : { totalQty: 0 };
+                            const targetData = data.targets ? data.targets[productKey] : null;
+                            
+                            const thisYearTotal = Math.round(productData.totalQty);
+                            const lastYearTotal = Math.round(lastYearData.totalQty);
+                            const quarterlyTarget = targetData ? targetData.quarterly : null;
+                            
+                            // 計算達成率
+                            const achievementRate = quarterlyTarget && quarterlyTarget > 0 ? (thisYearTotal / quarterlyTarget * 100) : null;
+                            const achievementClass = achievementRate ? (achievementRate >= 100 ? 'positive' : achievementRate >= 80 ? 'neutral' : 'negative') : 'neutral';
+                            
+                            // 計算 YoY
+                            const yoy = lastYearTotal > 0 ? ((thisYearTotal - lastYearTotal) / lastYearTotal * 100) : 0;
+                            const yoyClass = yoy > 0 ? 'positive' : yoy < 0 ? 'negative' : 'neutral';
+                            const yoySign = yoy > 0 ? '+' : '';
+                            
+                            return `
+                                <tr>
+                                    <td>${product}</td>
+                                    <td>${quarterlyTarget ? quarterlyTarget.toLocaleString() : '-'}</td>
+                                    <td><strong>${thisYearTotal.toLocaleString()}</strong></td>
+                                    <td>${achievementRate !== null ? `<span class="${achievementClass}">${achievementRate.toFixed(1)}%</span>` : '-'}</td>
+                                    <td>${lastYearTotal.toLocaleString()}</td>
+                                    <td><span class="${yoyClass}">${yoySign}${yoy.toFixed(1)}%</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 繪製圖表
+        function drawCharts(storeId, data) {
+            const ctx = document.getElementById(`chart-${storeId}`);
+            if (!ctx) return;
+
+            const mainProducts = ['CPU', 'iPad', 'iPhone', 'AW'];
+            const thisYearData = mainProducts.map(p => {
+                const key = p === 'AW' ? 'Apple Watch' : p;
+                return data.products[key] ? data.products[key].totalQty : 0;
+            });
+            
+            const lastYearData = mainProducts.map(p => {
+                const key = p === 'AW' ? 'Apple Watch' : p;
+                return data.lastYearProducts && data.lastYearProducts[key] ? data.lastYearProducts[key].totalQty : 0;
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: mainProducts,
+                    datasets: [
+                        {
+                            label: '去年同期累積',
+                            data: lastYearData,
+                            backgroundColor: 'rgba(100, 116, 139, 0.8)',
+                            borderColor: 'rgba(100, 116, 139, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '本季累積',
+                            data: thisYearData,
+                            backgroundColor: 'rgba(134, 239, 172, 0.8)',
+                            borderColor: 'rgba(134, 239, 172, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',  // 橫向顯示
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e0e0',
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        datalabels: {
+                            display: true,
+                            color: '#ffffff',
+                            font: {
+                                weight: 'bold',
+                                size: 11
+                            },
+                            anchor: 'end',
+                            align: 'end',
+                            formatter: function(value) {
+                                return value > 0 ? value : '';
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#e0e0e0',
+                                font: {
+                                    size: 13,
+                                    weight: '500'
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 繪製 Traffic 轉換率圖表
+        function drawTrafficChart(storeId, data) {
+            const ctx = document.getElementById(`traffic-chart-${storeId}`);
+            if (!ctx) return;
+
+            const fiveProducts = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods'];
+            
+            // 動態獲取週數
+            const totalWeeks = data.weeklyTraffic ? data.weeklyTraffic.length : 0;
+            
+            // 計算每週數據
+            const weekLabels = [];
+            const trafficData = [];
+            const conversionData = [];
+            
+            for (let week = 0; week < totalWeeks; week++) {
+                weekLabels.push(`W${week + 1}`);
+                
+                // 計算成交台數
+                let salesCount = 0;
+                fiveProducts.forEach(product => {
+                    if (data.products[product] && data.products[product].weeklyQty) {
+                        salesCount += data.products[product].weeklyQty[week] || 0;
+                    }
+                });
+                
+                const traffic = data.weeklyTraffic[week] || 0;
+                const conversion = traffic > 0 ? (salesCount / traffic * 100) : 0;
+                
+                trafficData.push(traffic);
+                conversionData.push(conversion);
+            }
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weekLabels,
+                    datasets: [
+                        {
+                            label: '成交轉換率',
+                            data: conversionData,
+                            type: 'line',
+                            borderColor: 'rgba(96, 165, 250, 1)',
+                            backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(96, 165, 250, 1)',
+                            yAxisID: 'y1',
+                            tension: 0.3,
+                            datalabels: {
+                                display: false  // 折線圖不顯示數值
+                            }
+                        },
+                        {
+                            label: '進店人流',
+                            data: trafficData,
+                            backgroundColor: 'rgba(134, 239, 172, 0.6)',
+                            borderColor: 'rgba(134, 239, 172, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            datalabels: {
+                                display: true,
+                                color: '#ffffff',
+                                font: {
+                                    weight: 'bold',
+                                    size: 10
+                                },
+                                anchor: 'end',
+                                align: 'top',
+                                formatter: function(value) {
+                                    return value > 0 ? value.toLocaleString() : '';
+                                }
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 20
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e0e0',
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#60a5fa',
+                                callback: function(value) {
+                                    return value.toFixed(1) + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 頁面載入時執行
+        window.addEventListener('DOMContentLoaded', loadQuarterlyData);
+    </script>
+</body>
+</html>
