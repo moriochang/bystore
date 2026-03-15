@@ -840,9 +840,15 @@
                 const workbookLastYear = XLSX.read(new Uint8Array(dataLastYear), { type: 'array' });
                 const workbookTargets = XLSX.read(new Uint8Array(dataTargets), { type: 'array' });
 
-                // 解析數據 - 今年用 '26'，去年用 '25'
+                // 先解析今年數據，獲取今年的週數
                 const quarterDataThisYear = parseQuarterlyData(workbookThisYear, weekInfo.reviewWeek, '26');
-                const quarterDataLastYear = parseQuarterlyData(workbookLastYear, weekInfo.reviewWeek, '25');
+                
+                // 計算今年的週數（從今年數據中獲取）
+                const thisYearWeeks = Object.values(quarterDataThisYear)[0]?.weeklyTraffic?.length || 0;
+                
+                // 解析去年數據，使用今年的週數作為上限（確保同期對比）
+                const quarterDataLastYear = parseQuarterlyData(workbookLastYear, weekInfo.reviewWeek, '25', thisYearWeeks);
+                
                 const targetsData = parseTargetsData(workbookTargets);
                 
                 // 合併去年數據、目標數據和 Care 數據到今年數據中
@@ -870,7 +876,7 @@
         }
 
         // 解析季度數據
-        function parseQuarterlyData(workbook, reviewWeek, fiscalYear = '26') {
+        function parseQuarterlyData(workbook, reviewWeek, fiscalYear = '26', maxWeeks = null) {
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             
@@ -885,9 +891,12 @@
 
             // 動態計算總週數：計算有多少個週次欄位（格式如 26Q2W1, 26Q2W2, ...）
             const weekPattern = new RegExp(`^${fiscalYear}Q2W\\d+$`);
-            const totalWeeks = weekHeaders.filter(h => h && weekPattern.test(h)).length;
+            const availableWeeks = weekHeaders.filter(h => h && weekPattern.test(h)).length;
             
-            console.log(`偵測到 ${totalWeeks} 週的數據`);
+            // 如果提供了 maxWeeks，使用較小的值（用於去年數據，確保同期對比）
+            const totalWeeks = maxWeeks ? Math.min(availableWeeks, maxWeeks) : availableWeeks;
+            
+            console.log(`${fiscalYear}Q2 偵測到 ${availableWeeks} 週的數據，使用 ${totalWeeks} 週進行累積`);
 
             const result = {};
 
