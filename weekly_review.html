@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iStore 中區週報回顧</title>
+    <title>iStore 中區週報回顧 v2.1</title>
+    <!-- Version 2.1: Fixed last year accumulation logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -845,6 +846,7 @@
                 
                 // 計算今年的週數（從今年數據中獲取）
                 const thisYearWeeks = Object.values(quarterDataThisYear)[0]?.weeklyTraffic?.length || 0;
+                console.log(`✅ 今年週數: ${thisYearWeeks}，將限制去年數據也使用 ${thisYearWeeks} 週`);
                 
                 // 解析去年數據，使用今年的週數作為上限（確保同期對比）
                 const quarterDataLastYear = parseQuarterlyData(workbookLastYear, weekInfo.reviewWeek, '25', thisYearWeeks);
