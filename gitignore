@@ -1,0 +1,71 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# 編輯器 / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Node.js (如果有使用)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 臨時檔案
+*.tmp
+*.temp
+*.log
+*.bak
+*.cache
+
+# 備份檔案
+*.xlsx~
+*.xls~
+*~$*.xlsx
+*~$*.xls
+
+# Excel 臨時檔案
+~$*.xlsx
+~$*.xls
+
+# 壓縮檔案（如果不需要追蹤）
+# *.zip
+# *.tar.gz
+# *.rar
+
+# 測試檔案（如果有）
+test/
+tests/
+*.test.js
+
+# 個人筆記
+notes.txt
+TODO.md
+scratch.md
+
+# Python (如果有使用)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+env/
+
+# 其他
+*.orig
