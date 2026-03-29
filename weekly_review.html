@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iStore 中區週報回顧 v2.1</title>
-    <!-- Version 2.1: Fixed last year accumulation logic -->
+    <title>iStore 中區週報回顧 v3.0</title>
+    <!-- Version 3.0: Multi-quarter support with cross-quarter review -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -404,7 +404,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v2.1</span></h1>
+            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v3.0</span></h1>
             <div class="week-info" id="weekInfo">載入中...</div>
             <a href="index.html" class="back-link">← 返回銷售分析</a>
         </header>
@@ -761,12 +761,24 @@
             `;
         }
 
-        // 計算當前應該回顧的週次
-        function getCurrentWeekInfo() {
-            const today = new Date();
-            
-            // FY26Q2 的週次定義
-            const weeks = [
+        // 完整的季度週次定義（從 CSV 檔案提取）
+        const FISCAL_QUARTERS = {
+            'FY26Q1': [
+                { week: 'W1', start: '2025-09-28', end: '2025-10-04' },
+                { week: 'W2', start: '2025-10-05', end: '2025-10-11' },
+                { week: 'W3', start: '2025-10-12', end: '2025-10-18' },
+                { week: 'W4', start: '2025-10-19', end: '2025-10-25' },
+                { week: 'W5', start: '2025-10-26', end: '2025-11-01' },
+                { week: 'W6', start: '2025-11-02', end: '2025-11-08' },
+                { week: 'W7', start: '2025-11-09', end: '2025-11-15' },
+                { week: 'W8', start: '2025-11-16', end: '2025-11-22' },
+                { week: 'W9', start: '2025-11-23', end: '2025-11-29' },
+                { week: 'W10', start: '2025-11-30', end: '2025-12-06' },
+                { week: 'W11', start: '2025-12-07', end: '2025-12-13' },
+                { week: 'W12', start: '2025-12-14', end: '2025-12-20' },
+                { week: 'W13', start: '2025-12-21', end: '2025-12-27' },
+            ],
+            'FY26Q2': [
                 { week: 'W1', start: '2025-12-28', end: '2026-01-03' },
                 { week: 'W2', start: '2026-01-04', end: '2026-01-10' },
                 { week: 'W3', start: '2026-01-11', end: '2026-01-17' },
@@ -780,50 +792,116 @@
                 { week: 'W11', start: '2026-03-08', end: '2026-03-14' },
                 { week: 'W12', start: '2026-03-15', end: '2026-03-21' },
                 { week: 'W13', start: '2026-03-22', end: '2026-03-28' },
-            ];
+            ],
+            'FY26Q3': [
+                { week: 'W1', start: '2026-03-29', end: '2026-04-04' },
+                { week: 'W2', start: '2026-04-05', end: '2026-04-11' },
+                { week: 'W3', start: '2026-04-12', end: '2026-04-18' },
+                { week: 'W4', start: '2026-04-19', end: '2026-04-25' },
+                { week: 'W5', start: '2026-04-26', end: '2026-05-02' },
+                { week: 'W6', start: '2026-05-03', end: '2026-05-09' },
+                { week: 'W7', start: '2026-05-10', end: '2026-05-16' },
+                { week: 'W8', start: '2026-05-17', end: '2026-05-23' },
+                { week: 'W9', start: '2026-05-24', end: '2026-05-30' },
+                { week: 'W10', start: '2026-05-31', end: '2026-06-06' },
+                { week: 'W11', start: '2026-06-07', end: '2026-06-13' },
+                { week: 'W12', start: '2026-06-14', end: '2026-06-20' },
+                { week: 'W13', start: '2026-06-21', end: '2026-06-27' },
+            ],
+            'FY26Q4': [
+                { week: 'W1', start: '2026-06-28', end: '2026-07-04' },
+                { week: 'W2', start: '2026-07-05', end: '2026-07-11' },
+                { week: 'W3', start: '2026-07-12', end: '2026-07-18' },
+                { week: 'W4', start: '2026-07-19', end: '2026-07-25' },
+                { week: 'W5', start: '2026-07-26', end: '2026-08-01' },
+                { week: 'W6', start: '2026-08-02', end: '2026-08-08' },
+                { week: 'W7', start: '2026-08-09', end: '2026-08-15' },
+                { week: 'W8', start: '2026-08-16', end: '2026-08-22' },
+                { week: 'W9', start: '2026-08-23', end: '2026-08-29' },
+                { week: 'W10', start: '2026-08-30', end: '2026-09-05' },
+                { week: 'W11', start: '2026-09-06', end: '2026-09-12' },
+                { week: 'W12', start: '2026-09-13', end: '2026-09-19' },
+                { week: 'W13', start: '2026-09-20', end: '2026-09-26' },
+            ],
+        };
 
-            // 找出當前在哪一週
+        // 計算當前應該回顧的週次（支援跨季度）
+        function getCurrentWeekInfo() {
+            const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
-            let currentWeek = null;
             
-            for (let i = 0; i < weeks.length; i++) {
-                if (todayStr >= weeks[i].start && todayStr <= weeks[i].end) {
-                    currentWeek = weeks[i];
-                    break;
+            let currentQuarter = null;
+            let currentWeek = null;
+            let reviewQuarter = null;
+            let reviewWeek = null;
+            
+            // 找出當前在哪個季度的哪一週
+            for (const [quarter, weeks] of Object.entries(FISCAL_QUARTERS)) {
+                for (const week of weeks) {
+                    if (todayStr >= week.start && todayStr <= week.end) {
+                        currentQuarter = quarter;
+                        currentWeek = week;
+                        break;
+                    }
                 }
+                if (currentWeek) break;
             }
-
-            // 如果找不到，默認為最後一週
+            
+            // 如果找不到當前週次，使用最新的季度和週次
             if (!currentWeek) {
+                const quarters = Object.keys(FISCAL_QUARTERS);
+                currentQuarter = quarters[quarters.length - 1];
+                const weeks = FISCAL_QUARTERS[currentQuarter];
                 currentWeek = weeks[weeks.length - 1];
             }
-
-            // 回顧上一週
+            
+            // 計算回顧週次（上一週）
             const currentWeekNum = parseInt(currentWeek.week.substring(1));
-            const reviewWeekNum = currentWeekNum - 1;
-            const reviewWeek = weeks.find(w => w.week === `W${reviewWeekNum}`);
+            
+            if (currentWeekNum === 1) {
+                // W1 回顧上一季的 W13
+                const quarters = Object.keys(FISCAL_QUARTERS);
+                const currentQuarterIndex = quarters.indexOf(currentQuarter);
+                
+                if (currentQuarterIndex > 0) {
+                    reviewQuarter = quarters[currentQuarterIndex - 1];
+                    const prevQuarterWeeks = FISCAL_QUARTERS[reviewQuarter];
+                    reviewWeek = prevQuarterWeeks[prevQuarterWeeks.length - 1];  // W13
+                } else {
+                    // 如果是第一個季度的 W1，回顧自己的 W1
+                    reviewQuarter = currentQuarter;
+                    reviewWeek = currentWeek;
+                }
+            } else {
+                // 回顧同季度的上一週
+                reviewQuarter = currentQuarter;
+                const weeks = FISCAL_QUARTERS[currentQuarter];
+                reviewWeek = weeks.find(w => w.week === `W${currentWeekNum - 1}`);
+            }
 
             return {
+                currentQuarter: currentQuarter,
                 currentWeek: currentWeek.week,
+                reviewQuarter: reviewQuarter,
                 reviewWeek: reviewWeek ? reviewWeek.week : 'W1',
                 reviewDateRange: reviewWeek ? `${reviewWeek.start.substring(5)} ~ ${reviewWeek.end.substring(5)}` : '',
                 start: reviewWeek ? reviewWeek.start : '',
                 end: reviewWeek ? reviewWeek.end : '',
-                quarter: 'FY26Q2'
+                quarter: reviewQuarter  // 回顧週次所在的季度
             };
         }
 
         // 載入季度數據
         async function loadQuarterlyData() {
-            console.log('🎯 系統版本: v2.1 (去年同期累積修正版)');
+            console.log('🎯 系統版本: v3.0 (多季度支援 + 跨季度回顧)');
             console.log('📅 載入時間:', new Date().toLocaleString('zh-TW'));
             
             const weekInfo = getCurrentWeekInfo();
             
             // 更新頁面標題
             document.getElementById('weekInfo').innerHTML = `
-                本週：${weekInfo.quarter}${weekInfo.currentWeek}<br>
-                <span style="color: #fb923c;">回顧週：${weekInfo.quarter}${weekInfo.reviewWeek} (${weekInfo.reviewDateRange})</span>
+                本週：${weekInfo.currentQuarter}${weekInfo.currentWeek}<br>
+                <span style="color: #fb923c;">回顧週：${weekInfo.reviewQuarter}${weekInfo.reviewWeek} (${weekInfo.reviewDateRange})</span>
             `;
 
             try {
