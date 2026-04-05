@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iStore 中區週報回顧 v3.0</title>
-    <!-- Version 3.0: Multi-quarter support with cross-quarter review -->
+    <title>iStore 中區週報回顧 v3.1</title>
+    <!-- Version 3.1: Fixed dynamic last year quarter calculation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -404,7 +404,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v3.0</span></h1>
+            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v3.1</span></h1>
             <div class="week-info" id="weekInfo">載入中...</div>
             <a href="index.html" class="back-link">← 返回銷售分析</a>
         </header>
@@ -893,7 +893,7 @@
 
         // 載入季度數據
         async function loadQuarterlyData() {
-            console.log('🎯 系統版本: v3.0 (多季度支援 + 跨季度回顧)');
+            console.log('🎯 系統版本: v3.1 (修正去年季度自動計算)');
             console.log('📅 載入時間:', new Date().toLocaleString('zh-TW'));
             
             const weekInfo = getCurrentWeekInfo();
@@ -905,10 +905,19 @@
             `;
 
             try {
+                // 動態計算去年同期的季度
+                // 例如：FY26Q3 → FY25Q3, FY26Q2 → FY25Q2
+                const currentQuarter = weekInfo.quarter;  // e.g., 'FY26Q3'
+                const yearNum = parseInt(currentQuarter.substring(2, 4));  // 26
+                const quarterNum = currentQuarter.substring(4);  // 'Q3'
+                const lastYearQuarter = `FY${yearNum - 1}${quarterNum}`;  // 'FY25Q3'
+                
+                console.log(`📊 載入季度數據：今年 ${currentQuarter}, 去年 ${lastYearQuarter}`);
+                
                 // 載入今年、去年、目標檔案和 Care 檔案
                 const [responseThisYear, responseLastYear, responseTargets, careData] = await Promise.all([
                     fetch(`data/quarterly/${weekInfo.quarter}.xlsx`),
-                    fetch(`data/quarterly/FY25Q2.xlsx`),
+                    fetch(`data/quarterly/${lastYearQuarter}.xlsx`),
                     fetch(`data/quarterly/${weekInfo.quarter}_targets.xlsx`),
                     loadCareFiles(weekInfo)
                 ]);
@@ -923,15 +932,19 @@
                 const workbookLastYear = XLSX.read(new Uint8Array(dataLastYear), { type: 'array' });
                 const workbookTargets = XLSX.read(new Uint8Array(dataTargets), { type: 'array' });
 
+                // 提取財年數字（例如 'FY26Q3' → '26'）
+                const thisYearNum = currentQuarter.substring(2, 4);  // '26'
+                const lastYearNum = String(parseInt(thisYearNum) - 1);  // '25'
+                
                 // 先解析今年數據，獲取今年的週數
-                const quarterDataThisYear = parseQuarterlyData(workbookThisYear, weekInfo.reviewWeek, '26');
+                const quarterDataThisYear = parseQuarterlyData(workbookThisYear, weekInfo.reviewWeek, thisYearNum);
                 
                 // 計算今年的週數（從今年數據中獲取）
                 const thisYearWeeks = Object.values(quarterDataThisYear)[0]?.weeklyTraffic?.length || 0;
                 console.log(`✅ 今年週數: ${thisYearWeeks}，將限制去年數據也使用 ${thisYearWeeks} 週`);
                 
                 // 解析去年數據，使用今年的週數作為上限（確保同期對比）
-                const quarterDataLastYear = parseQuarterlyData(workbookLastYear, weekInfo.reviewWeek, '25', thisYearWeeks);
+                const quarterDataLastYear = parseQuarterlyData(workbookLastYear, weekInfo.reviewWeek, lastYearNum, thisYearWeeks);
                 
                 const targetsData = parseTargetsData(workbookTargets);
                 
