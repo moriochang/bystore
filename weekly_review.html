@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iStore 中區週報回顧 v3.3</title>
-    <!-- Version 3.3: Fixed Care file date calculation for cross-month weeks -->
+    <title>iStore 中區週報回顧 v3.4</title>
+    <!-- Version 3.4: Fixed FY prefix removal for Excel column matching -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -404,7 +404,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v3.3</span></h1>
+            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v3.4</span></h1>
             <div class="week-info" id="weekInfo">載入中...</div>
             <a href="index.html" class="back-link">← 返回銷售分析</a>
         </header>
@@ -894,7 +894,7 @@
 
         // 載入季度數據
         async function loadQuarterlyData() {
-            console.log('🎯 系統版本: v3.3 (修正跨月 Care 檔案日期計算)');
+            console.log('🎯 系統版本: v3.4 (修正 Excel 欄位名稱匹配)');
             console.log('📅 載入時間:', new Date().toLocaleString('zh-TW'));
             
             const weekInfo = getCurrentWeekInfo();
@@ -981,9 +981,13 @@
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             
+            // 移除 FY 前綴以匹配 Excel 欄位格式
+            // 例如: FY26Q3 → 26Q3, FY25Q3 → 25Q3
+            const quarterCode = fiscalYearQuarter.replace('FY', '');
+            
             // 找出回顧週的欄位位置
             const weekHeaders = rows[0];
-            const fullWeekName = `${fiscalYearQuarter}${reviewWeek}`;  // 例如: 26Q3W1 或 25Q3W1
+            const fullWeekName = `${quarterCode}${reviewWeek}`;  // 例如: 26Q3W1 或 25Q3W1
             const weekIndex = weekHeaders.findIndex(h => h === fullWeekName);
             
             if (weekIndex === -1) {
@@ -991,13 +995,13 @@
             }
 
             // 動態計算總週數：計算有多少個週次欄位（格式如 26Q3W1, 26Q3W2, ...）
-            const weekPattern = new RegExp(`^${fiscalYearQuarter}W\\d+$`);
+            const weekPattern = new RegExp(`^${quarterCode}W\\d+$`);
             const availableWeeks = weekHeaders.filter(h => h && weekPattern.test(h)).length;
             
             // 如果提供了 maxWeeks，使用較小的值（用於去年數據，確保同期對比）
             const totalWeeks = maxWeeks ? Math.min(availableWeeks, maxWeeks) : availableWeeks;
             
-            console.log(`${fiscalYearQuarter} 偵測到 ${availableWeeks} 週的數據，使用 ${totalWeeks} 週進行累積`);
+            console.log(`${quarterCode} 偵測到 ${availableWeeks} 週的數據，使用 ${totalWeeks} 週進行累積`);
 
             const result = {};
 
