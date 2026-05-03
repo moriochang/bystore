@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iStore 中區週報回顧 v3.5</title>
-    <!-- Version 3.5: Fixed Care file to use end date month -->
+    <title>iStore 中區週報回顧 v4.0</title>
+    <!-- Version 4.0: Fixed Care files to use last.xls and this.xls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -404,7 +404,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v3.5</span></h1>
+            <h1>iStore 中區週報回顧 <span style="font-size: 0.5em; color: #4ade80;">v4.0</span></h1>
             <div class="week-info" id="weekInfo">載入中...</div>
             <a href="index.html" class="back-link">← 返回銷售分析</a>
         </header>
@@ -471,31 +471,17 @@
                 
                 console.log(`載入了 ${Object.keys(careClass5).length} 個 Care 產品分類`);
                 
-                // 根據回顧週次計算檔名
-                // Care 檔案格式：從月初（01日）到回顧週結束日期
-                // 使用結束日期的月份，例如：W1 (03-29 ~ 04-04) → 20260401-20260404.xls
-                
-                // 提取回顧週的結束日期
-                const endDate = reviewWeekInfo.end;      // '2026-04-04'
-                
-                // 使用結束日期的年月來計算月初
-                const [endYear, endMonth, endDay] = endDate.split('-');
-                const monthStart = `${endYear}-${endMonth}-01`;
-                
-                // 今年檔名：結束日期的月初到回顧週結束
-                const thisYearStart = monthStart.replace(/-/g, '');  // '20260401'
-                const thisYearEnd = endDate.replace(/-/g, '');       // '20260404'
-                const thisYearFilename = `${thisYearStart}-${thisYearEnd}.xls`;
-                
-                // 去年同期檔名（年份 -1）
-                const lastYearStart = monthStart.replace(endYear, String(parseInt(endYear) - 1)).replace(/-/g, '');
-                const lastYearEnd = endDate.replace(endYear, String(parseInt(endYear) - 1)).replace(/-/g, '');
-                const lastYearFilename = `${lastYearStart}-${lastYearEnd}.xls`;
+                // 固定檔名：last.xls (去年) 和 this.xls (今年)
+                const lastYearFilename = 'last.xls';
+                const thisYearFilename = 'this.xls';
                 
                 console.log(`載入 Care 檔案: ${lastYearFilename}, ${thisYearFilename}`);
                 
                 // 載入今年和去年的 Care 檔案
-                const careDataPromises = [lastYearFilename, thisYearFilename].map(async filename => {
+                const careDataPromises = [
+                    { filename: lastYearFilename, label: '去年' },
+                    { filename: thisYearFilename, label: '今年' }
+                ].map(async ({ filename, label }) => {
                     try {
                         const response = await fetch(`data/care/${filename}`);
                         if (!response.ok) {
@@ -505,15 +491,21 @@
                         const arrayBuffer = await response.arrayBuffer();
                         const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
                         
-                        // 從檔名提取日期範圍並格式化
-                        // 檔名格式: 20260301-20260314.xls
-                        const dateRange = filename.replace('.xls', '');
-                        const [startStr, endStr] = dateRange.split('-');
+                        // 從 Excel 第一行第一個儲存格讀取日期範圍
+                        // 預期格式: "03/29-04/04" 或 "20260329-20260404"
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const firstCell = sheet['A1'];
+                        let displayDate = label;  // 預設顯示
                         
-                        // 格式化為 2026/03/01~03/14
-                        const startFormatted = `${startStr.substring(0, 4)}/${startStr.substring(4, 6)}/${startStr.substring(6, 8)}`;
-                        const endFormatted = `${endStr.substring(4, 6)}/${endStr.substring(6, 8)}`;
-                        const displayDate = `${startFormatted}~${endFormatted}`;
+                        if (firstCell && firstCell.v) {
+                            const cellValue = firstCell.v.toString();
+                            // 嘗試解析日期格式
+                            if (cellValue.includes('-')) {
+                                displayDate = cellValue;
+                            }
+                        }
+                        
+                        console.log(`${label} Care 檔案日期: ${displayDate}`);
                         
                         return {
                             filename: filename,
@@ -532,9 +524,6 @@
                     console.warn('Care 檔案載入不完整，可能缺少去年或今年的檔案');
                     return null;
                 }
-                
-                // 根據日期排序（舊的在前）
-                careFiles.sort((a, b) => a.date.localeCompare(b.date));
                 
                 return {
                     lastYear: careFiles[0],
@@ -893,7 +882,7 @@
 
         // 載入季度數據
         async function loadQuarterlyData() {
-            console.log('🎯 系統版本: v3.5 (修正 Care 使用結束日期月份)');
+            console.log('🎯 系統版本: v4.0 (Care 固定檔名 last.xls/this.xls)');
             console.log('📅 載入時間:', new Date().toLocaleString('zh-TW'));
             
             const weekInfo = getCurrentWeekInfo();
